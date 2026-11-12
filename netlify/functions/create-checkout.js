@@ -1,8 +1,8 @@
-const https = require('https');
-const dns = require('dns');
+import https from 'https';
+import dns from 'dns';
 dns.setDefaultResultOrder('ipv4first');
 
-exports.handler = async function(event, context) {
+export async function handler(event, context) {
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method Not Allowed' }) };
   }
@@ -10,16 +10,14 @@ exports.handler = async function(event, context) {
   const apiKey = process.env.SUMUP_API_KEY;
   const merchantCode = process.env.SUMUP_MERCHANT_CODE;
 
-  // Diagnostic direct dans le terminal
   console.log("--- DEBUG SUMUP ENV ---");
-  console.log("SUMUP_API_KEY présente :", !!apiKey, apiKey ? `(Commence par ${apiKey.substring(0, 6)}...)` : "VIDE / UNDEFINED");
-  console.log("SUMUP_MERCHANT_CODE :", merchantCode || "VIDE / UNDEFINED");
+  console.log("SUMUP_API_KEY présente :", !!apiKey);
   console.log("------------------------");
 
   if (!apiKey || !merchantCode) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Variables SUMUP_API_KEY ou SUMUP_MERCHANT_CODE absentes ou non chargées par Netlify dev.' })
+      body: JSON.stringify({ error: 'Variables SUMUP_API_KEY ou SUMUP_MERCHANT_CODE absentes dans l environnement Netlify.' })
     };
   }
 
@@ -65,8 +63,6 @@ exports.handler = async function(event, context) {
       req.end();
     });
 
-    console.log("Réponse brute SumUp (Code", sumupResponse.statusCode, ") :", sumupResponse.body);
-
     let parsedData;
     try {
       parsedData = JSON.parse(sumupResponse.body);
@@ -93,4 +89,4 @@ exports.handler = async function(event, context) {
       body: JSON.stringify({ error: err.message })
     };
   }
-};
+}
