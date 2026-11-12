@@ -7,7 +7,6 @@ import { ShieldCheck, CreditCard, Building, MapPin, CheckCircle, ArrowLeft, Load
 
 export const CheckoutPage: React.FC = () => {
   const { cart, totalPriceTTC, shippingFee, clearCart } = useCart();
-  const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
     companyName: '',

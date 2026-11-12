@@ -16,7 +16,6 @@ import {
   Package,
   X,
   Sparkles,
-  ShieldCheck
 } from 'lucide-react';
 
 export const HomePage: React.FC = () => {

@@ -6,7 +6,7 @@ import { FEMALE_CATALOG } from '../../data/femaleCatalog';
 import { ADULT_CATALOG } from '../../data/adultCatalog';
 import { PET_CATALOG } from '../../data/petCatalog';
 import { SITE_CONFIG } from '../../data/siteConfig';
-import { Phone, ArrowLeft, CheckCircle2, Eye, ShieldCheck, ChevronRight, ShoppingBag } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Eye, ChevronRight, ShoppingBag } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 export const CategoryPage: React.FC = () => {
