@@ -47,26 +47,21 @@ export const CheckoutPage: React.FC = () => {
         }),
       });
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Erreur lors de la création du paiement');
+  const data = await response.json();
+      
+        if (data.url) {
+          window.location.href = data.url;
+        } else if (data.id) {
+          window.location.href = `https://pay.sumup.com/${data.id}`;
+        } else {
+          throw new Error('Lien de redirection introuvable');
+        }
+      } catch (err: any) {
+        console.error('Erreur SumUp :', err);
+        alert(`Erreur de paiement : ${err.message || 'Impossible de contacter la passerelle.'}`);
+        setLoading(false);
       }
-
-      if (data.redirect_url) {
-        // Redirection immédiate vers la vraie page hébergée SumUp (Apple Pay / Google Pay natifs)
-        window.location.href = data.redirect_url;
-      } else if (data.id) {
-        window.location.href = `https://checkout.sumup.com/pay/${data.id}`;
-      } else {
-        throw new Error('URL de paiement SumUp introuvable');
-      }
-    } catch (err: any) {
-      console.error('Erreur SumUp :', err);
-      alert(`Erreur de paiement : ${err.message || 'Impossible de contacter la passerelle.'}`);
-      setLoading(false);
-    }
-  };
+    };
 
   const finalTotal = totalPriceTTC + shippingFee;
 

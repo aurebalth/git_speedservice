@@ -23,14 +23,12 @@ export async function handler(event, context) {
     const currency = bodyData.currency || 'EUR';
     const description = bodyData.description || 'Commande Speed Services';
 
-    // Payload pour générer un lien de paiement hébergé SumUp officiel
     const payload = JSON.stringify({
       checkout_reference: `CMD-${Date.now()}`,
       amount: amount,
       currency: currency,
       merchant_code: merchantCode,
       description: description,
-      return_url: `${event.headers.origin || 'https://speed-services.netlify.app'}/checkout?success=true`
     });
 
     const sumupResponse = await new Promise((resolve, reject) => {
@@ -67,14 +65,14 @@ export async function handler(event, context) {
       };
     }
 
-    // SumUp renvoie l'ID ou le lien, on s'assure de renvoyer l'URL de redirection complète ou l'ID gérable
-    // Si l'API renvoie un checkout_url ou un id exploitable pour le lien de paiement :
+    // Récupération de l'URL hébergée renvoyée par SumUp (ou fallback sur le format de lien officiel)
+    const hostedUrl = parsedData.checkout_url || parsedData.hosted_url || `https://pay.sumup.com/${parsedData.id}`;
+
     return {
       statusCode: 200,
       body: JSON.stringify({
-        id: parsedData.id,
-        // Si SumUp renvoie directement une URL de redirection, on la prend, sinon on la construit avec l'ID
-        redirect_url: parsedData.checkout_url || `https://checkout.sumup.com/pay/${parsedData.id}`
+        url: hostedUrl,
+        id: parsedData.id
       })
     };
 
