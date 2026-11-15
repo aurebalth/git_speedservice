@@ -1,3 +1,4 @@
+
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { Link } from 'react-router-dom';
@@ -13,10 +14,7 @@ import {
   Truck,
   Lock,
   AlertCircle,
-  Package,
-  Store,
-  CheckCircle2,
-  Search
+  Package
 } from 'lucide-react';
 
 interface CheckoutFormData {
@@ -30,27 +28,7 @@ interface CheckoutFormData {
   postalCode: string;
   country: string;
   notes: string;
-  deliveryType: 'home' | 'relay';
-  selectedRelay: {
-    id: string;
-    name: string;
-    address: string;
-    city: string;
-    postalCode: string;
-    network: string;
-  } | null;
 }
-
-// Base de données étendue de points relais pour recherche par ville ou code postal
-const ALL_RELAY_POINTS = [
-  { id: 'REL-75001-1', name: 'Tabac de la Tour', address: '15 rue de Rivoli', city: 'Paris', postalCode: '75001', network: 'Mondial Relay' },
-  { id: 'REL-75011-1', name: 'Presse Voltaire', address: '12 avenue de la République', city: 'Paris', postalCode: '75011', network: 'Mondial Relay' },
-  { id: 'REL-75011-2', name: 'Pressing Étoile', address: '45 rue Oberkampf', city: 'Paris', postalCode: '75011', network: 'Chronopost' },
-  { id: 'REL-75017-1', name: 'Fleuriste des Ternes', address: '8 rue Poncelet', city: 'Paris', postalCode: '75017', network: 'Colissimo' },
-  { id: 'REL-69003-1', name: 'Épicerie Centrale', address: '27 boulevard Victor Hugo', city: 'Lyon', postalCode: '69003', network: 'Mondial Relay' },
-  { id: 'REL-69002-1', name: 'Kiosque Bellecour', address: 'Place Bellecour', city: 'Lyon', postalCode: '69002', network: 'Chronopost' },
-  { id: 'REL-13001-1', name: 'Tabac du Vieux Port', address: '4 quai de Rive Neuve', city: 'Marseille', postalCode: '13001', network: 'Mondial Relay' },
-];
 
 export const CheckoutPage: React.FC = () => {
   const {
@@ -70,11 +48,8 @@ export const CheckoutPage: React.FC = () => {
     postalCode: '',
     country: 'France',
     notes: '',
-    deliveryType: 'home',
-    selectedRelay: null,
   });
 
-  const [relaySearchQuery, setRelaySearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -99,32 +74,6 @@ export const CheckoutPage: React.FC = () => {
     }
   };
 
-  const handleDeliveryTypeChange = (type: 'home' | 'relay') => {
-    setFormData(prev => ({
-      ...prev,
-      deliveryType: type,
-      selectedRelay: type === 'home' ? null : prev.selectedRelay
-    }));
-  };
-
-  const handleSelectRelay = (relay: typeof ALL_RELAY_POINTS[0]) => {
-    setFormData(prev => ({
-      ...prev,
-      selectedRelay: relay
-    }));
-  };
-
-  // Filtrer dynamiquement les points relais selon la saisie (ville ou code postal)
-  const filteredRelays = ALL_RELAY_POINTS.filter(relay => {
-    const query = relaySearchQuery.toLowerCase().trim();
-    if (!query) return true;
-    return (
-      relay.city.toLowerCase().includes(query) ||
-      relay.postalCode.includes(query) ||
-      relay.name.toLowerCase().includes(query)
-    );
-  });
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -134,11 +83,6 @@ export const CheckoutPage: React.FC = () => {
 
     if (cart.length === 0) {
       setErrorMessage('Votre panier est vide.');
-      return;
-    }
-
-    if (formData.deliveryType === 'relay' && !formData.selectedRelay) {
-      setErrorMessage('Veuillez sélectionner un point relais pour votre livraison.');
       return;
     }
 
@@ -167,10 +111,6 @@ export const CheckoutPage: React.FC = () => {
     setLoading(true);
 
     try {
-      const descriptionText = formData.deliveryType === 'relay' && formData.selectedRelay
-        ? `Commande Speed Services - ${formData.fullName} [Point Relais: ${formData.selectedRelay.name} - ${formData.selectedRelay.address}, ${formData.selectedRelay.postalCode} ${formData.selectedRelay.city}]`
-        : `Commande Speed Services - ${formData.fullName}`;
-
       // Création sécurisée du checkout via Netlify
       const response = await fetch(
         '/.netlify/functions/create-checkout',
@@ -185,7 +125,7 @@ export const CheckoutPage: React.FC = () => {
             amount: finalTotal,
             currency: 'EUR',
 
-            description: descriptionText,
+            description: `Commande Speed Services - ${formData.fullName}`,
 
             // Informations client
             customer: {
@@ -194,14 +134,15 @@ export const CheckoutPage: React.FC = () => {
               fullName: formData.fullName.trim(),
               email: formData.email.trim(),
               phone: formData.phone.trim(),
-              address: formData.deliveryType === 'relay' && formData.selectedRelay ? `${formData.selectedRelay.name} - ${formData.selectedRelay.address}` : formData.address.trim(),
-              city: formData.deliveryType === 'relay' && formData.selectedRelay ? formData.selectedRelay.city : formData.city.trim(),
-              postalCode: formData.deliveryType === 'relay' && formData.selectedRelay ? formData.selectedRelay.postalCode : formData.postalCode.trim(),
+              address: formData.address.trim(),
+              city: formData.city.trim(),
+              postalCode: formData.postalCode.trim(),
               country: formData.country,
-              notes: formData.deliveryType === 'relay' ? `POINT RELAIS: ${formData.selectedRelay?.name} (${formData.selectedRelay?.address}, ${formData.selectedRelay?.postalCode} ${formData.selectedRelay?.city}). Notes: ${formData.notes.trim()}` : formData.notes.trim(),
+              notes: formData.notes.trim(),
             },
 
             // Détail des produits
+            // Les prix doivent être recalculés côté serveur
             items: cart.map(item => ({
               sku: item.sku,
               variantSlug: item.variantSlug,
@@ -332,7 +273,8 @@ export const CheckoutPage: React.FC = () => {
             </h1>
 
             <p className="text-slate-500 text-sm mt-2">
-              Renseignez vos informations et choisissez votre mode de livraison.
+              Renseignez vos informations et votre adresse
+              de livraison pour finaliser votre commande.
             </p>
 
           </div>
@@ -450,208 +392,103 @@ export const CheckoutPage: React.FC = () => {
 
               </div>
 
-              {/* MODE DE LIVRAISON (DOMICILE VS POINT RELAIS) */}
+              {/* ADRESSE DE LIVRAISON */}
 
               <div className="bg-white p-6 md:p-8 rounded-3xl border border-slate-200 shadow-sm space-y-5">
 
                 <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-                  <Truck size={18} className="text-sky-600" />
-                  Mode de Livraison
+                  <MapPin
+                    size={18}
+                    className="text-sky-600"
+                  />
+                  Adresse de Livraison
                 </h2>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <button
-                    type="button"
-                    onClick={() => handleDeliveryTypeChange('home')}
-                    className={`p-4 rounded-2xl border text-left transition-all flex flex-col gap-2 cursor-pointer ${
-                      formData.deliveryType === 'home'
-                        ? 'border-sky-600 bg-sky-50/50 shadow-sm ring-2 ring-sky-600/20'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                        <Truck size={16} className="text-sky-600" /> Livraison à Domicile
-                      </span>
-                      {formData.deliveryType === 'home' && <CheckCircle2 size={18} className="text-sky-600" />}
-                    </div>
-                    <p className="text-xs text-slate-500">Livré directement à l'adresse indiquée.</p>
-                  </button>
+                <div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleDeliveryTypeChange('relay')}
-                    className={`p-4 rounded-2xl border text-left transition-all flex flex-col gap-2 cursor-pointer ${
-                      formData.deliveryType === 'relay'
-                        ? 'border-sky-600 bg-sky-50/50 shadow-sm ring-2 ring-sky-600/20'
-                        : 'border-slate-200 bg-white hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-sm text-slate-900 flex items-center gap-2">
-                        <Store size={16} className="text-sky-600" /> Retrait Point Relais
-                      </span>
-                      {formData.deliveryType === 'relay' && <CheckCircle2 size={18} className="text-sky-600" />}
-                    </div>
-                    <p className="text-xs text-slate-500">Recherchez un point relais par ville ou code postal.</p>
-                  </button>
+                  <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                    Adresse postale *
+                  </label>
+
+                  <input
+                    type="text"
+                    name="address"
+                    required
+                    autoComplete="street-address"
+                    maxLength={200}
+                    value={formData.address}
+                    onChange={handleChange}
+                    placeholder="10 rue de la République"
+                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
+                  />
+
                 </div>
 
-                {formData.deliveryType === 'relay' ? (
-                  <div className="pt-4 border-t border-slate-100 space-y-4">
-                    <label className="block text-xs font-bold text-slate-700 uppercase">
-                      Rechercher un Point Relais par Ville ou Code Postal *
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+
+                  <div>
+
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      Code Postal *
                     </label>
 
-                    <div className="relative">
-                      <Search size={18} className="absolute left-3.5 top-3.5 text-slate-400" />
-                      <input
-                        type="text"
-                        value={relaySearchQuery}
-                        onChange={(e) => setRelaySearchQuery(e.target.value)}
-                        placeholder="Ex: Paris, 75011, Lyon..."
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                      />
-                    </div>
+                    <input
+                      type="text"
+                      name="postalCode"
+                      required
+                      autoComplete="postal-code"
+                      maxLength={15}
+                      value={formData.postalCode}
+                      onChange={handleChange}
+                      placeholder="75001"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
+                    />
 
-                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
-                      {filteredRelays.length > 0 ? (
-                        filteredRelays.map((relay) => {
-                          const isSelected = formData.selectedRelay?.id === relay.id;
-                          return (
-                            <div
-                              key={relay.id}
-                              onClick={() => handleSelectRelay(relay)}
-                              className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                                isSelected
-                                  ? 'border-sky-600 bg-sky-50 shadow-sm'
-                                  : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300'
-                              }`}
-                            >
-                              <div className="space-y-0.5 min-w-0">
-                                <div className="flex items-center gap-2">
-                                  <span className="font-bold text-sm text-slate-900 truncate">{relay.name}</span>
-                                  <span className="text-[10px] font-semibold bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full shrink-0">{relay.network}</span>
-                                </div>
-                                <p className="text-xs text-slate-600 truncate">{relay.address}, {relay.postalCode} {relay.city}</p>
-                              </div>
-                              <div className="shrink-0">
-                                <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 bg-white'}`}>
-                                  {isSelected && <CheckCircle2 size={14} />}
-                                </div>
-                              </div>
-                            </div>
-                          );
-                        })
-                      ) : (
-                        <p className="text-xs text-slate-500 text-center py-4">Aucun point relais trouvé pour cette recherche.</p>
-                      )}
-                    </div>
-
-                    {formData.selectedRelay && (
-                      <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center gap-2">
-                        <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                        <span>Point relais choisi : <strong>{formData.selectedRelay.name}</strong> ({formData.selectedRelay.address}, {formData.selectedRelay.postalCode} {formData.selectedRelay.city})</span>
-                      </div>
-                    )}
                   </div>
-                ) : (
-                  <div className="pt-4 border-t border-slate-100 space-y-5">
-                    <h2 className="text-lg font-bold text-slate-900 flex items-center gap-2 border-b border-slate-100 pb-3">
-                      <MapPin
-                        size={18}
-                        className="text-sky-600"
-                      />
-                      Adresse de Livraison
-                    </h2>
 
-                    <div>
+                  <div>
 
-                      <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                        Adresse postale *
-                      </label>
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      Ville *
+                    </label>
 
-                      <input
-                        type="text"
-                        name="address"
-                        required={formData.deliveryType === 'home'}
-                        autoComplete="street-address"
-                        maxLength={200}
-                        value={formData.address}
-                        onChange={handleChange}
-                        placeholder="10 rue de la République"
-                        className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                      />
+                    <input
+                      type="text"
+                      name="city"
+                      required
+                      autoComplete="address-level2"
+                      maxLength={100}
+                      value={formData.city}
+                      onChange={handleChange}
+                      placeholder="Paris"
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
+                    />
 
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-
-                      <div>
-
-                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                          Code Postal *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="postalCode"
-                          required={formData.deliveryType === 'home'}
-                          autoComplete="postal-code"
-                          maxLength={15}
-                          value={formData.postalCode}
-                          onChange={handleChange}
-                          placeholder="75001"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                        />
-
-                      </div>
-
-                      <div>
-
-                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                          Ville *
-                        </label>
-
-                        <input
-                          type="text"
-                          name="city"
-                          required={formData.deliveryType === 'home'}
-                          autoComplete="address-level2"
-                          maxLength={100}
-                          value={formData.city}
-                          onChange={handleChange}
-                          placeholder="Paris"
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                        />
-
-                      </div>
-
-                      <div>
-
-                        <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                          Pays *
-                        </label>
-
-                        <select
-                          name="country"
-                          required
-                          value={formData.country}
-                          onChange={handleChange}
-                          className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                        >
-                          <option value="France">France</option>
-                          <option value="Belgique">Belgique</option>
-                          <option value="Suisse">Suisse</option>
-                          <option value="Luxembourg">Luxembourg</option>
-                          <option value="Pays-Bas">Pays-Bas</option>
-                        </select>
-
-                      </div>
-
-                    </div>
                   </div>
-                )}
+
+                  <div>
+
+                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
+                      Pays *
+                    </label>
+
+                    <select
+                      name="country"
+                      required
+                      value={formData.country}
+                      onChange={handleChange}
+                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
+                    >
+                      <option value="France">France</option>
+                      <option value="Belgique">Belgique</option>
+                      <option value="Suisse">Suisse</option>
+                      <option value="Luxembourg">Luxembourg</option>
+                      <option value="Pays-Bas">Pays-Bas</option>
+                    </select>
+
+                  </div>
+
+                </div>
 
                 <div>
 
@@ -665,9 +502,34 @@ export const CheckoutPage: React.FC = () => {
                     maxLength={1000}
                     value={formData.notes}
                     onChange={handleChange}
-                    placeholder="Ex : Code digicode, instructions particulières..."
+                    placeholder="Ex : Accès porteur 19T, prévenir 24h avant..."
                     className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500 resize-none"
                   />
+
+                </div>
+
+              </div>
+
+              {/* INFORMATIONS DE LIVRAISON */}
+
+              <div className="bg-sky-50 border border-sky-100 rounded-2xl p-5 flex items-start gap-3">
+
+                <Truck
+                  size={22}
+                  className="text-sky-600 shrink-0"
+                />
+
+                <div>
+
+                  <p className="font-bold text-sm text-sky-900">
+                    Livraison Speed Services
+                  </p>
+
+                  <p className="text-xs text-sky-800 mt-1">
+                    Les frais de livraison sont calculés
+                    automatiquement selon le montant et le
+                    nombre d'articles de votre commande.
+                  </p>
 
                 </div>
 
@@ -744,13 +606,6 @@ export const CheckoutPage: React.FC = () => {
                       {totalPriceTTC.toFixed(2)} €
                     </span>
 
-                  </div>
-
-                  <div className="flex justify-between text-slate-600">
-                    <span>Mode de livraison :</span>
-                    <span className="font-bold text-slate-900">
-                      {formData.deliveryType === 'relay' ? 'Point Relais' : 'Domicile'}
-                    </span>
                   </div>
 
                   <div className="flex justify-between text-slate-600">
