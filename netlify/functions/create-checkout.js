@@ -1,3 +1,4 @@
+
 import https from 'https';
 import dns from 'dns';
 import { randomUUID } from 'crypto';
@@ -14,6 +15,7 @@ export async function handler(event) {
 
   const apiKey = process.env.SUMUP_API_KEY;
   const merchantCode = process.env.SUMUP_MERCHANT_CODE;
+  const siteUrl = process.env.SITE_URL;
 
   if (!apiKey || !merchantCode) {
     return {
@@ -37,15 +39,33 @@ export async function handler(event) {
       };
     }
 
+    if (currency !== 'EUR') {
+      return {
+        statusCode: 400,
+        body: JSON.stringify({ error: 'Devise non autorisée.' })
+      };
+    }
+
     const checkoutReference = `CMD-${randomUUID()}`;
 
-    // Payload épuré et strictement conforme à l'API SumUp Checkouts v0.1
     const payload = JSON.stringify({
       checkout_reference: checkoutReference,
       amount: Number(amount.toFixed(2)),
-      currency: currency,
+      currency: 'EUR',
       merchant_code: merchantCode,
-      description: String(bodyData.description || 'Commande Speed Services').slice(0, 200)
+      description: String(
+        bodyData.description || 'Commande Speed Services'
+      ).slice(0, 200),
+
+      // Activation indispensable du paiement hébergé
+      hosted_checkout: {
+        enabled: true
+      },
+
+      // Retour sur le site après le paiement
+      ...(siteUrl ? {
+        redirect_url: `${siteUrl.replace(/\/$/, '')}/`
+      } : {})
     });
 
     const sumupResponse = await new Promise((resolve, reject) => {
@@ -60,9 +80,16 @@ export async function handler(event) {
         }
       }, (res) => {
         let data = '';
-        res.on('data', chunk => { data += chunk; });
+
+        res.on('data', chunk => {
+          data += chunk;
+        });
+
         res.on('end', () => {
-          resolve({ statusCode: res.statusCode, body: data });
+          resolve({
+            statusCode: res.statusCode,
+            body: data
+          });
         });
       });
 
@@ -76,14 +103,17 @@ export async function handler(event) {
     });
 
     let parsedData;
+
     try {
       parsedData = JSON.parse(sumupResponse.body);
     } catch {
       throw new Error('Réponse SumUp invalide.');
     }
 
-    if (sumupResponse.statusCode !== 201 && sumupResponse.statusCode !== 200) {
+    if (sumupResponse.statusCode !== 201 &&
+        sumupResponse.statusCode !== 200) {
       console.error('Erreur API SumUp:', parsedData);
+
       return {
         statusCode: 502,
         body: JSON.stringify({
@@ -93,13 +123,25 @@ export async function handler(event) {
       };
     }
 
-    // SumUp renvoie généralement l'ID et parfois l'URL selon les configs, 
-    // on sécurise la récupération en construisant l'URL officielle du Hosted Checkout si elle n'est pas explicite.
-    const hostedUrl = parsedData.hosted_checkout_url || parsedData.url || `https://checkout.sumup.com/pay/${parsedData.id}`;
+    // On récupère uniquement la véritable URL hébergée par SumUp.
+    const hostedUrl = parsedData.hosted_checkout_url;
+
+    if (!hostedUrl || !hostedUrl.startsWith('https://checkout.sumup.com/')) {
+      console.error('URL Hosted Checkout absente:', parsedData);
+
+      return {
+        statusCode: 502,
+        body: JSON.stringify({
+          error: 'SumUp n’a pas retourné de lien de paiement valide.'
+        })
+      };
+    }
 
     return {
       statusCode: 200,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {
+        'Content-Type': 'application/json'
+      },
       body: JSON.stringify({
         success: true,
         url: hostedUrl,
@@ -110,6 +152,7 @@ export async function handler(event) {
 
   } catch (error) {
     console.error('Erreur création checkout:', error);
+
     return {
       statusCode: 500,
       body: JSON.stringify({
