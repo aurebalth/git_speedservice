@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
 import { useCart } from '../../context/CartContext';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { SITE_CONFIG } from '../../data/siteConfig';
-import { ShieldCheck, CreditCard, Building, MapPin, CheckCircle, ArrowLeft, Loader2 } from 'lucide-react';
+import { ShieldCheck, CreditCard, Building, MapPin, ArrowLeft, Loader2 } from 'lucide-react';
 
 export const CheckoutPage: React.FC = () => {
-  const { cart, totalPriceTTC, shippingFee, clearCart } = useCart();
+  const { cart, totalPriceTTC, shippingFee } = useCart();
 
   const [formData, setFormData] = useState({
     companyName: '',
@@ -21,26 +21,10 @@ export const CheckoutPage: React.FC = () => {
     notes: '',
   });
 
-  const [orderSubmitted, setOrderSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [checkoutId, setCheckoutId] = useState<string | null>(null);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const mountSumUpWidget = (id: string) => {
-    (window as any).SumUpCard.mount({
-      id: id,
-      checkoutId: id,
-      onResponse: (type: string, body: any) => {
-        console.log('Retour SumUp :', type, body);
-        if (type === 'success' || body?.status === 'PAID') {
-          setOrderSubmitted(true);
-          clearCart();
-        }
-      },
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -63,67 +47,26 @@ export const CheckoutPage: React.FC = () => {
         }),
       });
 
-      if (!response.ok) {
-        setOrderSubmitted(true);
-        clearCart();
-        setLoading(false);
-        return;
-      }
-
       const data = await response.json();
 
-      if (data.id) {
-        // On sauvegarde l'ID pour afficher le conteneur DOM dans le JSX
-        setCheckoutId(data.id);
-        setLoading(false);
-
-        // Chargement du SDK SumUp et montage du widget de paiement sécurisé
-        if (!(window as any).SumUpCard) {
-          const script = document.createElement('script');
-          script.src = 'https://gateway.sumup.com/gateway/ecom/card/v2/sdk.js';
-          script.onload = () => mountSumUpWidget(data.id);
-          document.body.appendChild(script);
-        } else {
-          // Petit délai pour laisser React afficher la div avec l'ID dans le DOM
-          setTimeout(() => mountSumUpWidget(data.id), 100);
-        }
-      } else {
-        setOrderSubmitted(true);
-        clearCart();
-        setLoading(false);
+      if (!response.ok) {
+        throw new Error(data.error || 'Erreur lors de la création du paiement');
       }
-    } catch (err) {
+
+      if (data.id) {
+        // Redirection vers la page de paiement officielle SumUp (avec Apple Pay / Google Pay natifs)
+        window.location.href = `https://checkout.sumup.com/pay/${data.id}`;
+      } else {
+        throw new Error('ID de paiement SumUp introuvable');
+      }
+    } catch (err: any) {
       console.error('Erreur SumUp :', err);
-      setOrderSubmitted(true);
-      clearCart();
+      alert(`Erreur de paiement : ${err.message || 'Impossible de contacter la passerelle.'}`);
       setLoading(false);
     }
   };
 
   const finalTotal = totalPriceTTC + shippingFee;
-
-  if (orderSubmitted) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 py-24 text-center">
-        <div className="bg-emerald-50 border border-emerald-200 rounded-3xl p-10 shadow-sm">
-          <CheckCircle size={64} className="text-emerald-500 mx-auto mb-4" />
-          <h1 className="text-3xl font-black text-slate-900 mb-2">Commande Validée avec Succès !</h1>
-          <p className="text-slate-600 text-sm max-w-lg mx-auto mb-6">
-            Merci <strong>{formData.fullName}</strong>. Votre commande a bien été enregistrée. Un récapitulatif a été envoyé à <strong>{formData.email}</strong>.
-          </p>
-          <div className="bg-white p-6 rounded-2xl border border-emerald-100 text-left mb-8 space-y-2 text-xs text-slate-700">
-            <p><strong>Adresse de livraison :</strong> {formData.address}, {formData.postalCode} {formData.city} ({formData.country})</p>
-            <p><strong>Contact :</strong> {formData.phone}</p>
-            <p><strong>Frais d'expédition :</strong> {shippingFee === 0 ? 'Livraison Offerte' : `${shippingFee.toFixed(2)} €`}</p>
-            <p><strong>Mode de règlement :</strong> Paiement sécurisé / Facturation B2B SumUp</p>
-          </div>
-          <Link to="/" className="bg-slate-900 hover:bg-sky-600 text-white font-bold px-8 py-3.5 rounded-xl text-sm transition-colors inline-flex items-center gap-2">
-            Retour à l'accueil
-          </Link>
-        </div>
-      </div>
-    );
-  }
 
   if (cart.length === 0) {
     return (
@@ -318,33 +261,26 @@ export const CheckoutPage: React.FC = () => {
                 {/* Zone de paiement SumUp prête */}
                 <div className="bg-sky-50 border border-sky-100 rounded-2xl p-4 text-xs text-sky-900 space-y-1">
                   <div className="font-bold flex items-center gap-1.5 text-sky-800">
-                    <CreditCard size={15} /> Passerelle de Paiement Sécurisée SumUp
+                    <CreditCard size={15} /> Redirection Paiement Sécurisé SumUp
                   </div>
-                  <p className="text-[11px] text-sky-700">Paiement par carte bancaire sécurisé.</p>
+                  <p className="text-[11px] text-sky-700">Cartes bancaires, Apple Pay & Google Pay disponibles.</p>
                 </div>
 
-                {/* CONTENEUR REQUIS PAR LE SDK SUMUP : L'ID correspond au checkoutId généré */}
-                {checkoutId && (
-                  <div id={checkoutId} className="my-4 p-2 bg-white rounded-xl border border-sky-200 min-h-[50px]"></div>
-                )}
-
-                {!checkoutId && (
-                  <button
-                    type="submit"
-                    disabled={loading}
-                    className="w-full bg-sky-600 hover:bg-sky-500 disabled:bg-slate-400 text-white font-black py-4 rounded-xl text-sm shadow-xl shadow-sky-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
-                  >
-                    {loading ? (
-                      <>
-                        <Loader2 size={18} className="animate-spin" /> Connexion SumUp...
-                      </>
-                    ) : (
-                      <>
-                        <ShieldCheck size={18} /> Valider et Régler la Commande
-                      </>
-                    )}
-                  </button>
-                )}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full bg-sky-600 hover:bg-sky-500 disabled:bg-slate-400 text-white font-black py-4 rounded-xl text-sm shadow-xl shadow-sky-600/20 transition-all flex items-center justify-center gap-2 cursor-pointer"
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 size={18} className="animate-spin" /> Redirection vers SumUp...
+                    </>
+                  ) : (
+                    <>
+                      <ShieldCheck size={18} /> Valider et Régler la Commande
+                    </>
+                  )}
+                </button>
               </div>
             </div>
 
