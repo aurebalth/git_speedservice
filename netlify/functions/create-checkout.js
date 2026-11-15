@@ -10,14 +10,10 @@ export async function handler(event, context) {
   const apiKey = process.env.SUMUP_API_KEY;
   const merchantCode = process.env.SUMUP_MERCHANT_CODE;
 
-  console.log("--- DEBUG SUMUP ENV ---");
-  console.log("SUMUP_API_KEY présente :", !!apiKey);
-  console.log("------------------------");
-
   if (!apiKey || !merchantCode) {
     return {
       statusCode: 500,
-      body: JSON.stringify({ error: 'Variables SUMUP_API_KEY ou SUMUP_MERCHANT_CODE absentes dans l environnement Netlify.' })
+      body: JSON.stringify({ error: 'Variables SUMUP_API_KEY ou SUMUP_MERCHANT_CODE absentes.' })
     };
   }
 
@@ -27,12 +23,14 @@ export async function handler(event, context) {
     const currency = bodyData.currency || 'EUR';
     const description = bodyData.description || 'Commande Speed Services';
 
+    // Payload pour générer un lien de paiement hébergé SumUp officiel
     const payload = JSON.stringify({
       checkout_reference: `CMD-${Date.now()}`,
       amount: amount,
       currency: currency,
       merchant_code: merchantCode,
       description: description,
+      return_url: `${event.headers.origin || 'https://speed-services.netlify.app'}/checkout?success=true`
     });
 
     const sumupResponse = await new Promise((resolve, reject) => {
@@ -55,20 +53,12 @@ export async function handler(event, context) {
         });
       });
 
-      req.on('error', (err) => {
-        reject(err);
-      });
-
+      req.on('error', (err) => { reject(err); });
       req.write(payload);
       req.end();
     });
 
-    let parsedData;
-    try {
-      parsedData = JSON.parse(sumupResponse.body);
-    } catch (e) {
-      parsedData = { raw: sumupResponse.body };
-    }
+    const parsedData = JSON.parse(sumupResponse.body);
 
     if (sumupResponse.statusCode !== 200 && sumupResponse.statusCode !== 201) {
       return {
@@ -77,9 +67,15 @@ export async function handler(event, context) {
       };
     }
 
+    // SumUp renvoie l'ID ou le lien, on s'assure de renvoyer l'URL de redirection complète ou l'ID gérable
+    // Si l'API renvoie un checkout_url ou un id exploitable pour le lien de paiement :
     return {
       statusCode: 200,
-      body: JSON.stringify(parsedData)
+      body: JSON.stringify({
+        id: parsedData.id,
+        // Si SumUp renvoie directement une URL de redirection, on la prend, sinon on la construit avec l'ID
+        redirect_url: parsedData.checkout_url || `https://checkout.sumup.com/pay/${parsedData.id}`
+      })
     };
 
   } catch (err) {

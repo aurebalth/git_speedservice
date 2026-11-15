@@ -53,11 +53,13 @@ export const CheckoutPage: React.FC = () => {
         throw new Error(data.error || 'Erreur lors de la création du paiement');
       }
 
-      if (data.id) {
-        // Redirection vers la page de paiement officielle SumUp (avec Apple Pay / Google Pay natifs)
+      if (data.redirect_url) {
+        // Redirection immédiate vers la vraie page hébergée SumUp (Apple Pay / Google Pay natifs)
+        window.location.href = data.redirect_url;
+      } else if (data.id) {
         window.location.href = `https://checkout.sumup.com/pay/${data.id}`;
       } else {
-        throw new Error('ID de paiement SumUp introuvable');
+        throw new Error('URL de paiement SumUp introuvable');
       }
     } catch (err: any) {
       console.error('Erreur SumUp :', err);
