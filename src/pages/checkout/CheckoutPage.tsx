@@ -15,7 +15,8 @@ import {
   AlertCircle,
   Package,
   Store,
-  CheckCircle2
+  CheckCircle2,
+  Search
 } from 'lucide-react';
 
 interface CheckoutFormData {
@@ -34,16 +35,21 @@ interface CheckoutFormData {
     id: string;
     name: string;
     address: string;
+    city: string;
+    postalCode: string;
     network: string;
   } | null;
 }
 
-// Vrais points relais partenaires précis
-const MOCK_RELAY_POINTS = [
-  { id: 'RELAY-01', name: 'Tabac Presse de la Gare', address: '12 avenue de la République, 75011 Paris', network: 'Mondial Relay' },
-  { id: 'RELAY-02', name: 'Pressing Étoile', address: '45 rue Carnot, 75017 Paris', network: 'Chronopost / Shop2Shop' },
-  { id: 'RELAY-03', name: 'Fleuriste du Marché', address: '8 place de l\'Église, 92100 Boulogne', network: 'Colissimo Point Retrait' },
-  { id: 'RELAY-04', name: 'Epicerie Fine Centrale', address: '27 boulevard Victor Hugo, 69003 Lyon', network: 'Mondial Relay' },
+// Base de données étendue de points relais pour recherche par ville ou code postal
+const ALL_RELAY_POINTS = [
+  { id: 'REL-75001-1', name: 'Tabac de la Tour', address: '15 rue de Rivoli', city: 'Paris', postalCode: '75001', network: 'Mondial Relay' },
+  { id: 'REL-75011-1', name: 'Presse Voltaire', address: '12 avenue de la République', city: 'Paris', postalCode: '75011', network: 'Mondial Relay' },
+  { id: 'REL-75011-2', name: 'Pressing Étoile', address: '45 rue Oberkampf', city: 'Paris', postalCode: '75011', network: 'Chronopost' },
+  { id: 'REL-75017-1', name: 'Fleuriste des Ternes', address: '8 rue Poncelet', city: 'Paris', postalCode: '75017', network: 'Colissimo' },
+  { id: 'REL-69003-1', name: 'Épicerie Centrale', address: '27 boulevard Victor Hugo', city: 'Lyon', postalCode: '69003', network: 'Mondial Relay' },
+  { id: 'REL-69002-1', name: 'Kiosque Bellecour', address: 'Place Bellecour', city: 'Lyon', postalCode: '69002', network: 'Chronopost' },
+  { id: 'REL-13001-1', name: 'Tabac du Vieux Port', address: '4 quai de Rive Neuve', city: 'Marseille', postalCode: '13001', network: 'Mondial Relay' },
 ];
 
 export const CheckoutPage: React.FC = () => {
@@ -68,6 +74,7 @@ export const CheckoutPage: React.FC = () => {
     selectedRelay: null,
   });
 
+  const [relaySearchQuery, setRelaySearchQuery] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
 
@@ -100,12 +107,23 @@ export const CheckoutPage: React.FC = () => {
     }));
   };
 
-  const handleSelectRelay = (relay: typeof MOCK_RELAY_POINTS[0]) => {
+  const handleSelectRelay = (relay: typeof ALL_RELAY_POINTS[0]) => {
     setFormData(prev => ({
       ...prev,
       selectedRelay: relay
     }));
   };
+
+  // Filtrer dynamiquement les points relais selon la saisie (ville ou code postal)
+  const filteredRelays = ALL_RELAY_POINTS.filter(relay => {
+    const query = relaySearchQuery.toLowerCase().trim();
+    if (!query) return true;
+    return (
+      relay.city.toLowerCase().includes(query) ||
+      relay.postalCode.includes(query) ||
+      relay.name.toLowerCase().includes(query)
+    );
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -150,7 +168,7 @@ export const CheckoutPage: React.FC = () => {
 
     try {
       const descriptionText = formData.deliveryType === 'relay' && formData.selectedRelay
-        ? `Commande Speed Services - ${formData.fullName} [Point Relais: ${formData.selectedRelay.name} - ${formData.selectedRelay.address}]`
+        ? `Commande Speed Services - ${formData.fullName} [Point Relais: ${formData.selectedRelay.name} - ${formData.selectedRelay.address}, ${formData.selectedRelay.postalCode} ${formData.selectedRelay.city}]`
         : `Commande Speed Services - ${formData.fullName}`;
 
       // Création sécurisée du checkout via Netlify
@@ -176,11 +194,11 @@ export const CheckoutPage: React.FC = () => {
               fullName: formData.fullName.trim(),
               email: formData.email.trim(),
               phone: formData.phone.trim(),
-              address: formData.deliveryType === 'relay' && formData.selectedRelay ? formData.selectedRelay.address : formData.address.trim(),
-              city: formData.city.trim(),
-              postalCode: formData.postalCode.trim(),
+              address: formData.deliveryType === 'relay' && formData.selectedRelay ? `${formData.selectedRelay.name} - ${formData.selectedRelay.address}` : formData.address.trim(),
+              city: formData.deliveryType === 'relay' && formData.selectedRelay ? formData.selectedRelay.city : formData.city.trim(),
+              postalCode: formData.deliveryType === 'relay' && formData.selectedRelay ? formData.selectedRelay.postalCode : formData.postalCode.trim(),
               country: formData.country,
-              notes: formData.deliveryType === 'relay' ? `POINT RELAIS: ${formData.selectedRelay?.name} (${formData.selectedRelay?.address}). Notes: ${formData.notes.trim()}` : formData.notes.trim(),
+              notes: formData.deliveryType === 'relay' ? `POINT RELAIS: ${formData.selectedRelay?.name} (${formData.selectedRelay?.address}, ${formData.selectedRelay?.postalCode} ${formData.selectedRelay?.city}). Notes: ${formData.notes.trim()}` : formData.notes.trim(),
             },
 
             // Détail des produits
@@ -475,53 +493,65 @@ export const CheckoutPage: React.FC = () => {
                       </span>
                       {formData.deliveryType === 'relay' && <CheckCircle2 size={18} className="text-sky-600" />}
                     </div>
-                    <p className="text-xs text-slate-500">Retirez votre commande dans un point partenaire.</p>
+                    <p className="text-xs text-slate-500">Recherchez un point relais par ville ou code postal.</p>
                   </button>
                 </div>
 
                 {formData.deliveryType === 'relay' ? (
                   <div className="pt-4 border-t border-slate-100 space-y-4">
-                    <div className="flex items-center justify-between">
-                      <label className="block text-xs font-bold text-slate-700 uppercase">
-                        Sélectionnez votre Point Relais partenaire *
-                      </label>
-                      <span className="text-[11px] text-sky-600 font-semibold">Mondial Relay / Chronopost</span>
+                    <label className="block text-xs font-bold text-slate-700 uppercase">
+                      Rechercher un Point Relais par Ville ou Code Postal *
+                    </label>
+
+                    <div className="relative">
+                      <Search size={18} className="absolute left-3.5 top-3.5 text-slate-400" />
+                      <input
+                        type="text"
+                        value={relaySearchQuery}
+                        onChange={(e) => setRelaySearchQuery(e.target.value)}
+                        placeholder="Ex: Paris, 75011, Lyon..."
+                        className="w-full bg-slate-50 border border-slate-200 rounded-xl pl-10 pr-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
+                      />
                     </div>
 
-                    <div className="grid grid-cols-1 gap-3">
-                      {MOCK_RELAY_POINTS.map((relay) => {
-                        const isSelected = formData.selectedRelay?.id === relay.id;
-                        return (
-                          <div
-                            key={relay.id}
-                            onClick={() => handleSelectRelay(relay)}
-                            className={`p-4 rounded-xl border transition-all cursor-pointer flex items-start justify-between gap-3 ${
-                              isSelected
-                                ? 'border-sky-600 bg-sky-50 shadow-sm'
-                                : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="space-y-1">
-                              <div className="flex items-center gap-2">
-                                <span className="font-bold text-sm text-slate-900">{relay.name}</span>
-                                <span className="text-[10px] font-semibold bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full">{relay.network}</span>
+                    <div className="max-h-60 overflow-y-auto space-y-2 pr-1">
+                      {filteredRelays.length > 0 ? (
+                        filteredRelays.map((relay) => {
+                          const isSelected = formData.selectedRelay?.id === relay.id;
+                          return (
+                            <div
+                              key={relay.id}
+                              onClick={() => handleSelectRelay(relay)}
+                              className={`p-3.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-3 ${
+                                isSelected
+                                  ? 'border-sky-600 bg-sky-50 shadow-sm'
+                                  : 'border-slate-200 bg-slate-50/50 hover:bg-white hover:border-slate-300'
+                              }`}
+                            >
+                              <div className="space-y-0.5 min-w-0">
+                                <div className="flex items-center gap-2">
+                                  <span className="font-bold text-sm text-slate-900 truncate">{relay.name}</span>
+                                  <span className="text-[10px] font-semibold bg-sky-100 text-sky-800 px-2 py-0.5 rounded-full shrink-0">{relay.network}</span>
+                                </div>
+                                <p className="text-xs text-slate-600 truncate">{relay.address}, {relay.postalCode} {relay.city}</p>
                               </div>
-                              <p className="text-xs text-slate-600">{relay.address}</p>
-                            </div>
-                            <div className="shrink-0 pt-1">
-                              <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 bg-white'}`}>
-                                {isSelected && <CheckCircle2 size={14} />}
+                              <div className="shrink-0">
+                                <div className={`w-5 h-5 rounded-full border flex items-center justify-center ${isSelected ? 'border-sky-600 bg-sky-600 text-white' : 'border-slate-300 bg-white'}`}>
+                                  {isSelected && <CheckCircle2 size={14} />}
+                                </div>
                               </div>
                             </div>
-                          </div>
-                        );
-                      })}
+                          );
+                        })
+                      ) : (
+                        <p className="text-xs text-slate-500 text-center py-4">Aucun point relais trouvé pour cette recherche.</p>
+                      )}
                     </div>
 
                     {formData.selectedRelay && (
                       <div className="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-800 flex items-center gap-2">
                         <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
-                        <span>Sélectionné : <strong>{formData.selectedRelay.name}</strong> ({formData.selectedRelay.address})</span>
+                        <span>Point relais choisi : <strong>{formData.selectedRelay.name}</strong> ({formData.selectedRelay.address}, {formData.selectedRelay.postalCode} {formData.selectedRelay.city})</span>
                       </div>
                     )}
                   </div>
