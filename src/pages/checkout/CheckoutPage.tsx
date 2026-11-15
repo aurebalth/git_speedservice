@@ -356,38 +356,6 @@ export const CheckoutPage: React.FC = () => {
                     />
                   </div>
 
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Nom de l'entreprise
-                    </label>
-
-                    <input
-                      type="text"
-                      name="companyName"
-                      maxLength={150}
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      placeholder="Entreprise (facultatif)"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      SIRET
-                    </label>
-
-                    <input
-                      type="text"
-                      name="siret"
-                      maxLength={14}
-                      value={formData.siret}
-                      onChange={handleChange}
-                      placeholder="Numéro SIRET (facultatif)"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
                 </div>
 
               </div>
