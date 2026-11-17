@@ -21,7 +21,7 @@ type Stats = {
   revenue: number; customers: number; itemsSold: number; averageBasket: number; dailySales: number; weeklySales: number; monthlySales: number;
   cartsCreated: number; cartsValidated: number; cartsConverted: number; cartsAbandoned: number; cartsAverage: number; cartConversionRate: number;
 };
-type ApiResponse = { success?: boolean; orders?: Order[]; carts?: Cart[]; stats?: Stats; error?: string };
+type ApiResponse = { success?: boolean; authenticated?: boolean; orders?: Order[]; carts?: Cart[]; stats?: Stats; error?: string };
 
 const API_URL = '/.netlify/functions/admin-checkout';
 const EMPTY_STATS: Stats = {
@@ -64,22 +64,51 @@ export const AdminPage: React.FC = () => {
   const loadOrders = useCallback(async (login = false) => {
     setLoading(true); setError(''); setNotice('');
     try {
-      const response = await fetch(API_URL, {
-        method: 'POST', credentials: 'include', cache: 'no-store',
+      const requestOptions = (body: Record<string, string>): RequestInit => ({
+        method: 'POST',
+        credentials: 'include',
+        cache: 'no-store',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-        body: JSON.stringify(login ? { action: 'login', username, password } : { action: 'list' }),
+        body: JSON.stringify(body),
       });
+
+      if (login) {
+        const loginResponse = await fetch(API_URL, requestOptions({
+          action: 'login',
+          username,
+          password,
+        }));
+        const loginData = await loginResponse.json().catch(() => ({})) as ApiResponse;
+
+        if (!loginResponse.ok || loginData.success !== true || loginData.authenticated !== true) {
+          throw new Error(loginData.error || `Connexion refusée (${loginResponse.status}).`);
+        }
+
+        // La réponse de login confirme uniquement l'authentification.
+        // La liste des commandes doit être demandée séparément avec le cookie de session.
+        setIsAuthenticated(true);
+        setPassword('');
+      }
+
+      const response = await fetch(API_URL, requestOptions({ action: 'list' }));
       const data = await response.json().catch(() => ({})) as ApiResponse;
+
       if (!response.ok) throw new Error(data.error || `Erreur serveur (${response.status}).`);
-      if (!Array.isArray(data.orders)) throw new Error('La réponse du serveur ne contient pas de commandes valides.');
+      if (!Array.isArray(data.orders)) {
+        throw new Error('Le serveur a confirmé la connexion, mais sa réponse de chargement ne contient pas de liste de commandes.');
+      }
+
       setOrders(data.orders);
-      setStats(data.stats || EMPTY_STATS); setLastUpdated(new Date());
-      if (login) { setIsAuthenticated(true); setPassword(''); }
-      else setNotice('Les commandes Speed Services ont été actualisées.');
+      setStats(data.stats || EMPTY_STATS);
+      setLastUpdated(new Date());
+      if (!login) setNotice('Les commandes Speed Services ont été actualisées.');
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Une erreur inattendue est survenue.';
-      setError(message); if (login || message.toLowerCase().includes('session')) setIsAuthenticated(false);
-    } finally { setLoading(false); }
+      setError(message);
+      if (login || message.toLowerCase().includes('session')) setIsAuthenticated(false);
+    } finally {
+      setLoading(false);
+    }
   }, [username, password]);
 
   const handleLogin = async (event: React.FormEvent<HTMLFormElement>) => { event.preventDefault(); await loadOrders(true); };
