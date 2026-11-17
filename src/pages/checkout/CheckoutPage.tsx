@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { useCart } from '../../context/CartContext';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
@@ -34,7 +34,8 @@ export const CheckoutPage: React.FC = () => {
   const {
     cart,
     totalPriceTTC,
-    shippingFee
+    shippingFee,
+    cartId
   } = useCart();
 
   const [formData, setFormData] = useState<CheckoutFormData>({
@@ -51,6 +52,7 @@ export const CheckoutPage: React.FC = () => {
   });
 
   const [loading, setLoading] = useState(false);
+  const requestIdRef = useRef<string | null>(null);
   const [errorMessage, setErrorMessage] = useState('');
 
   const finalTotal = Number(
@@ -111,6 +113,7 @@ export const CheckoutPage: React.FC = () => {
     setLoading(true);
 
     try {
+      const checkoutStartedAt = performance.now();
       // Création sécurisée du checkout via Netlify
       const response = await fetch(
         '/.netlify/functions/create-checkout',
@@ -122,6 +125,16 @@ export const CheckoutPage: React.FC = () => {
           },
 
           body: JSON.stringify({
+            requestId: (() => {
+              if (!requestIdRef.current) {
+                requestIdRef.current = sessionStorage.getItem('speed_services_checkout_request_id') || (typeof crypto !== 'undefined' && 'randomUUID' in crypto
+                  ? crypto.randomUUID()
+                  : `${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`);
+                sessionStorage.setItem('speed_services_checkout_request_id', requestIdRef.current);
+              }
+              return requestIdRef.current;
+            })(),
+            cartId,
             amount: finalTotal,
             currency: 'EUR',
 
@@ -155,6 +168,7 @@ export const CheckoutPage: React.FC = () => {
         }
       );
 
+      const checkoutResponseMs = Math.round(performance.now() - checkoutStartedAt);
       let data: any;
 
       try {
@@ -166,6 +180,10 @@ export const CheckoutPage: React.FC = () => {
       }
 
       if (!response.ok) {
+        if (data.retryable === false) {
+          requestIdRef.current = null;
+          sessionStorage.removeItem('speed_services_checkout_request_id');
+        }
         throw new Error(
           data.details?.error_message ||
           data.details?.message ||
@@ -195,7 +213,12 @@ export const CheckoutPage: React.FC = () => {
         );
       }
 
-      // Redirection vers la page officielle de paiement SumUp
+      // Mesure du temps passé sur notre backend, sans journaliser les données personnelles.
+      console.info('[Speed Services] Création du checkout:', { clientRequestMs: checkoutResponseMs, serverTimings: data.timings || null });
+      requestIdRef.current = null;
+      sessionStorage.removeItem('speed_services_checkout_request_id');
+
+      // Redirection vers la page officielle de paiement SumUp. Le chargement externe dépend ensuite de SumUp et du navigateur.
       window.location.assign(parsedUrl.toString());
 
     } catch (error: unknown) {
@@ -352,38 +375,6 @@ export const CheckoutPage: React.FC = () => {
                       value={formData.phone}
                       onChange={handleChange}
                       placeholder="06 12 34 56 78"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      Nom de l'entreprise
-                    </label>
-
-                    <input
-                      type="text"
-                      name="companyName"
-                      maxLength={150}
-                      value={formData.companyName}
-                      onChange={handleChange}
-                      placeholder="Entreprise (facultatif)"
-                      className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
-                    />
-                  </div>
-
-                  <div className="sm:col-span-2">
-                    <label className="block text-xs font-bold text-slate-700 uppercase mb-1">
-                      SIRET
-                    </label>
-
-                    <input
-                      type="text"
-                      name="siret"
-                      maxLength={14}
-                      value={formData.siret}
-                      onChange={handleChange}
-                      placeholder="Numéro SIRET (facultatif)"
                       className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm text-slate-800 focus:outline-none focus:border-sky-500"
                     />
                   </div>

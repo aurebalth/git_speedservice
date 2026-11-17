@@ -23,6 +23,7 @@ interface CartContextType {
   shippingFee: number;
   freeShippingThreshold: number;
   amountForFreeShipping: number;
+  cartId: string;
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
@@ -35,10 +36,41 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     return saved ? JSON.parse(saved) : [];
   });
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [cartId, setCartId] = useState(() => {
+    const existing = localStorage.getItem('speed_services_cart_id');
+    if (existing) return existing;
+    const created = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem('speed_services_cart_id', created);
+    return created;
+  });
 
   useEffect(() => {
     localStorage.setItem('speed_services_cart', JSON.stringify(cart));
-  }, [cart]);
+    if (cart.length === 0) return;
+    const controller = new AbortController();
+    const trackingTimer = window.setTimeout(() => {
+      fetch('/.netlify/functions/cart-tracking', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          cartId,
+          items: cart.map(({ sku, variantSlug, quantity }) => ({ sku, variantSlug, quantity })),
+        }),
+        signal: controller.signal,
+        keepalive: true,
+      }).then(async (response) => {
+        if (!response.ok) return;
+        const result = await response.json().catch(() => ({}));
+        if (result.cartId && result.cartId !== cartId) {
+          localStorage.setItem('speed_services_cart_id', result.cartId);
+          setCartId(result.cartId);
+        }
+      }).catch(() => { /* Le suivi panier ne doit jamais bloquer le panier client. */ });
+    }, 400);
+    return () => { window.clearTimeout(trackingTimer); controller.abort(); };
+  }, [cart, cartId]);
 
   const addToCart = (item: Omit<CartItem, 'quantity'>, quantity = 1) => {
     setCart((prev) => {
@@ -67,7 +99,14 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
     );
   };
 
-  const clearCart = () => setCart([]);
+  const clearCart = () => {
+    setCart([]);
+    const nextId = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(16).slice(2)}-${Math.random().toString(16).slice(2)}`;
+    localStorage.setItem('speed_services_cart_id', nextId);
+    setCartId(nextId);
+  };
 
   const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
   const totalPriceTTC = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
@@ -110,6 +149,7 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
         shippingFee,
         freeShippingThreshold: FREE_SHIPPING_THRESHOLD,
         amountForFreeShipping,
+        cartId,
       }}
     >
       {children}

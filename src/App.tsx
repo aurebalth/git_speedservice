@@ -1,4 +1,5 @@
-import { useEffect } from 'react';import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, useLocation } from 'react-router-dom';
 import { Navbar } from './components/Navbar';
 import { Footer } from './components/Footer';
 import { HomePage } from './pages/home/HomePage';
@@ -11,6 +12,9 @@ import { LegalPage } from './pages/legal/LegalPage';
 import { CartProvider } from './context/CartContext';
 import { CartDrawer } from './components/CartDrawer';
 import { CheckoutPage } from './pages/checkout/CheckoutPage';
+
+// Page Administration Sécurisée
+import { AdminPage } from './pages/admin/AdminPage';
 
 // Composant pour forcer le scroll en haut à chaque changement de page
 const ScrollToTop = () => {
@@ -42,6 +46,9 @@ function App() {
 
               {/* Tunnel de Commande E-Commerce */}
               <Route path="/checkout" element={<CheckoutPage />} />
+
+              {/* Route Administration Sécurisée */}
+              <Route path="/admin" element={<AdminPage />} />
 
               {/* Routes Produits & Catégories (Gère à la fois le Hub et le détail de sous-catégorie) */}
               <Route path="/produit/detail/:productSlug" element={<ProductDetailPage />} />
