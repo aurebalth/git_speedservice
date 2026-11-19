@@ -225,13 +225,6 @@ export const ProductDetailPage: React.FC = () => {
                       <ShoppingBag size={18} /> Ajouter au panier
                     </button>
                   </div>
-
-                  <a
-                    href={`tel:${SITE_CONFIG.phoneRaw}`}
-                    className="w-full bg-slate-800 hover:bg-slate-700 text-white font-bold py-3 px-5 rounded-xl flex items-center justify-center gap-2 transition-colors text-xs border border-slate-700"
-                  >
-                    <Phone size={14} /> Commander par téléphone ({SITE_CONFIG.phoneDisplay})
-                  </a>
                 </div>
               </div>
 

@@ -34,11 +34,11 @@ export const CartDrawer: React.FC = () => {
     <div className="fixed inset-0 z-[110] overflow-hidden">
       <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm transition-opacity" onClick={() => setIsCartOpen(false)} />
 
-      <div className="absolute inset-y-0 right-0 max-w-full flex pl-10">
-        <div className="w-screen max-w-md bg-white shadow-2xl flex flex-col">
+      <div className="absolute inset-y-0 right-0 flex w-full justify-end sm:w-auto">
+        <div className="flex h-[100dvh] w-full max-w-[28rem] min-w-0 flex-col bg-white shadow-2xl sm:w-[28rem]">
           
           {/* Header */}
-          <div className="p-6 bg-slate-950 text-white flex items-center justify-between">
+          <div className="shrink-0 bg-slate-950 p-4 text-white flex items-center justify-between sm:p-6">
             <div className="flex items-center gap-2">
               <ShoppingBag className="text-sky-400" size={20} />
               <h2 className="font-black text-base tracking-wide">Panier B2B ({totalItems})</h2>
@@ -53,7 +53,7 @@ export const CartDrawer: React.FC = () => {
 
           {/* Jauge d'offre livraison offerte (Seuil 50€) */}
           {cart.length > 0 && (
-            <div className="bg-sky-50 p-4 border-b border-sky-100">
+            <div className="shrink-0 bg-sky-50 p-3 border-b border-sky-100 sm:p-4">
               <div className="flex items-center gap-2 text-xs font-bold text-sky-900 mb-2">
                 <Truck size={16} className="text-sky-600 shrink-0" />
                 {amountForFreeShipping > 0 ? (
@@ -74,7 +74,7 @@ export const CartDrawer: React.FC = () => {
           )}
 
           {/* Liste des articles */}
-          <div className="flex-1 overflow-y-auto p-6 space-y-4">
+          <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain p-3 space-y-3 sm:p-6 sm:space-y-4">
             {cart.length === 0 ? (
               <div className="text-center py-20 text-slate-400">
                 <ShoppingBag size={48} className="mx-auto mb-3 opacity-30" />
@@ -83,8 +83,8 @@ export const CartDrawer: React.FC = () => {
               </div>
             ) : (
               cart.map((item) => (
-                <div key={item.sku} className="flex gap-4 p-4 bg-slate-50 rounded-2xl border border-slate-200 items-center">
-                  <img src={item.image} alt={item.label} className="w-16 h-16 object-contain bg-white rounded-xl p-1 border border-slate-100 shrink-0" />
+                <div key={item.sku} className="flex min-w-0 items-center gap-3 rounded-2xl border border-slate-200 bg-slate-50 p-3 sm:gap-4 sm:p-4">
+                  <img src={item.image} alt={item.label} className="h-14 w-14 shrink-0 rounded-xl border border-slate-100 bg-white object-contain p-1 sm:h-16 sm:w-16" />
                   <div className="flex-1 min-w-0">
                     <span className="text-[10px] font-mono font-bold bg-slate-200 text-slate-700 px-2 py-0.5 rounded">SKU : {item.sku}</span>
                     <h4 className="font-bold text-slate-900 text-xs truncate mt-1">{item.label}</h4>
@@ -123,7 +123,7 @@ export const CartDrawer: React.FC = () => {
 
           {/* Footer & Totaux TTC */}
           {cart.length > 0 && (
-            <div className="p-6 bg-slate-50 border-t border-slate-200 space-y-3">
+            <div className="shrink-0 max-h-[48dvh] overflow-y-auto overscroll-contain border-t border-slate-200 bg-slate-50 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] space-y-3 sm:max-h-none sm:overflow-visible sm:p-6">
               <div className="space-y-1.5 text-xs text-slate-600">
                 <div className="flex justify-between">
                   <span>Sous-total :</span>
@@ -146,13 +146,13 @@ export const CartDrawer: React.FC = () => {
               <div className="grid grid-cols-2 gap-2 pt-2">
                 <button
                   onClick={clearCart}
-                  className="py-3 px-4 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition-colors"
+                  className="min-w-0 py-3 px-2 sm:px-4 rounded-xl border border-slate-300 text-slate-700 font-bold text-[11px] sm:text-xs hover:bg-slate-100 transition-colors"
                 >
                   Vider le panier
                 </button>
                 <button
                   onClick={handleCheckout}
-                  className="py-3 px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-sky-600/20 transition-all"
+                  className="min-w-0 py-3 px-2 sm:px-4 rounded-xl bg-sky-600 hover:bg-sky-500 text-white font-black text-[11px] sm:text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-sky-600/20 transition-all"
                 >
                   Commander <ArrowRight size={14} />
                 </button>
