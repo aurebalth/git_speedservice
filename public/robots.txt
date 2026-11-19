@@ -3,4 +3,4 @@ Allow: /
 Disallow: /admin
 Disallow: /checkout
 
-Sitemap: https://speeddservices.netlify.app/sitemap.xml
+Sitemap: https://speedservices.store/sitemap.xml

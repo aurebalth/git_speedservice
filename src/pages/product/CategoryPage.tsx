@@ -18,7 +18,7 @@ export const CategoryPage: React.FC = () => {
   let catalog = BABY_CATALOG;
   let universeTitle = "Bébé & Enfant (Babylino)";
   let universeBasePath = "/produit/couches/bebe";
-  let universeDescription = "Découvrez notre gamme complète de couches, culottes et soins certifiés pour bébés.";
+  let universeDescription = "Découvrez les couches bébé Babylino, les tailles et les conditionnements disponibles au catalogue Speed Services.";
 
   if (location.pathname.includes('/hygiene-feminine')) {
     catalog = FEMALE_CATALOG;
@@ -42,8 +42,22 @@ export const CategoryPage: React.FC = () => {
     return (
       <>
         <Helmet>
-          <title>{universeTitle} | Catalogue Professionnel - {SITE_CONFIG.name}</title>
+          <title>{universeBasePath === "/produit/couches/bebe" ? "Couches bébé Babylino : tailles et modèles" : universeTitle} | {SITE_CONFIG.name}</title>
           <meta name="description" content={universeDescription} />
+          <link rel="canonical" href={`https://speedservices.store${universeBasePath}`} />
+          <meta property="og:title" content={`${universeTitle} | ${SITE_CONFIG.name}`} />
+          <meta property="og:description" content={universeDescription} />
+          <meta property="og:type" content="website" />
+          <meta property="og:url" content={`https://speedservices.store${universeBasePath}`} />
+          <script type="application/ld+json">{JSON.stringify({
+            '@context': 'https://schema.org', '@type': 'CollectionPage', name: universeTitle,
+            description: universeDescription, url: `https://speedservices.store${universeBasePath}`,
+            inLanguage: 'fr-FR', isPartOf: { '@type': 'WebSite', name: 'Speed Services', url: 'https://speedservices.store/' },
+            mainEntity: { '@type': 'ItemList', itemListElement: catalog.map((item: any, index: number) => ({
+              '@type': 'ListItem', position: index + 1, name: item.name,
+              url: `https://speedservices.store${universeBasePath}/${item.id}`
+            })) }
+          })}</script>
         </Helmet>
 
         <nav className="bg-slate-900 text-slate-300 py-3.5 border-b border-slate-800 text-xs">
@@ -111,6 +125,29 @@ export const CategoryPage: React.FC = () => {
                 </Link>
               ))}
             </div>
+            {universeBasePath === "/produit/couches/bebe" && (
+              <section className="mt-14 bg-white border border-slate-200 rounded-2xl p-6 md:p-9">
+                <h2 className="text-2xl font-bold text-slate-900 mb-4">Bien choisir ses couches bébé</h2>
+                <div className="grid md:grid-cols-2 gap-8 text-sm leading-relaxed text-slate-600">
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-2">Quelle taille de couche choisir ?</h3>
+                    <p>Le poids de bébé est le premier repère pour choisir une taille. Consultez la fourchette de poids indiquée sur chaque paquet et comparez-la au poids actuel de votre enfant. Si la couche marque la peau, ferme difficilement ou laisse régulièrement passer des fuites, vérifiez son ajustement et envisagez la taille adaptée suivante.</p>
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-slate-900 mb-2">Couches classiques, culottes et changes</h3>
+                    <p>Les couches à attaches permettent d’ajuster la fermeture, tandis que les culottes d’apprentissage s’enfilent comme un sous-vêtement. Le choix dépend notamment de l’âge, de la mobilité et des habitudes de change. Consultez les descriptions et les conditionnements de chaque référence Babylino avant votre achat.</p>
+                  </div>
+                </div>
+                <div className="mt-7 border-t border-slate-100 pt-6">
+                  <h3 className="font-bold text-slate-900 mb-3">Questions fréquentes sur les couches bébé</h3>
+                  <div className="space-y-4 text-sm text-slate-600">
+                    <div><h4 className="font-semibold text-slate-900">Comment savoir si une couche est à la bonne taille ?</h4><p>Elle doit épouser le corps sans comprimer, rester bien en place et limiter les espaces au niveau des cuisses. Vérifiez aussi la plage de poids du fabricant.</p></div>
+                    <div><h4 className="font-semibold text-slate-900">Faut-il choisir une couche plus grande pour la nuit ?</h4><p>Pas systématiquement. Choisissez d’abord une taille adaptée au poids et à la morphologie de bébé, puis consultez les caractéristiques d’absorption indiquées pour la référence.</p></div>
+                    <div><h4 className="font-semibold text-slate-900">Où consulter les tailles et les conditionnements Babylino ?</h4><p>Chaque fiche produit présente les tailles, les unités par paquet, le prix et les informations propres à la référence disponible au catalogue.</p></div>
+                  </div>
+                </div>
+              </section>
+            )}
           </div>
         </section>
       </>
@@ -147,7 +184,21 @@ export const CategoryPage: React.FC = () => {
     <>
       <Helmet>
         <title>{product.name} | Catalogue Professionnel - {SITE_CONFIG.name}</title>
-        <meta name="description" content={product.description} />
+        <meta name="description" content={`${product.description} Consultez les tailles, conditionnements et références disponibles chez Speed Services.`.slice(0, 155)} />
+        <link rel="canonical" href={`https://speedservices.store${universeBasePath}/${product.id}`} />
+        <meta property="og:title" content={`${product.name} | ${SITE_CONFIG.name}`} />
+        <meta property="og:description" content={product.description} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={`https://speedservices.store${universeBasePath}/${product.id}`} />
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org', '@type': 'CollectionPage', name: product.name,
+          description: product.description, url: `https://speedservices.store${universeBasePath}/${product.id}`,
+          inLanguage: 'fr-FR',
+          mainEntity: { '@type': 'ItemList', itemListElement: (product.variants || []).map((variant: any, index: number) => ({
+            '@type': 'ListItem', position: index + 1, name: variant.label,
+            url: `https://speedservices.store/produit/detail/${variant.slug || variant.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '')}`
+          })) }
+        })}</script>
       </Helmet>
 
       {/* Fil d'Ariane */}
@@ -179,6 +230,12 @@ export const CategoryPage: React.FC = () => {
               </span>
             ))}
           </div>
+        </div>
+      </section>
+
+      <section className="bg-white py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <p className="max-w-4xl text-sm leading-relaxed text-slate-600">{product.description} Retrouvez ci-dessous les formats et références associés à cette gamme. Les informations de poids, de taille, de quantité et de prix sont indiquées sur chaque fiche produit afin de vous aider à comparer les conditionnements avant de commander.</p>
         </div>
       </section>
 

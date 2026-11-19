@@ -72,8 +72,36 @@ export const ProductDetailPage: React.FC = () => {
     .sort(() => 0.5 - Math.random())
     .slice(0, 3);
 
-  const seoTitle = `${variant.label} - ${parentCategory.name} | ${SITE_CONFIG.name}`;
-  const seoDescription = variant.detailedDescription || parentCategory.description;
+  const seoTitle = `${variant.label} | ${parentCategory.name} - ${SITE_CONFIG.name}`;
+  const seoDescription = `${variant.detailedDescription || parentCategory.description} Consultez le prix et les caractéristiques de cette référence chez Speed Services.`.slice(0, 155);
+  const canonicalUrl = `https://speedservices.store/produit/detail/${productSlug}`;
+  const productStructuredData = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: variant.label,
+    description: variant.detailedDescription || parentCategory.description,
+    sku: variant.sku,
+    image: variant.image?.startsWith('http') ? variant.image : `https://speedservices.store${variant.image}`,
+    category: parentCategory.subCategory,
+    brand: { '@type': 'Brand', name: parentCategory.name },
+    offers: {
+      '@type': 'Offer',
+      url: canonicalUrl,
+      priceCurrency: 'EUR',
+      price: Number(variant.price).toFixed(2),
+      availability: variant.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
+      itemCondition: 'https://schema.org/NewCondition'
+    }
+  };
+  const breadcrumbStructuredData = {
+    '@context': 'https://schema.org', '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://speedservices.store/' },
+      { '@type': 'ListItem', position: 2, name: parentCategory.subCategory, item: `https://speedservices.store${categoryUrl}` },
+      { '@type': 'ListItem', position: 3, name: parentCategory.name, item: `https://speedservices.store${categoryUrl}` },
+      { '@type': 'ListItem', position: 4, name: variant.label, item: canonicalUrl }
+    ]
+  };
 
   const handleAddToCart = () => {
     addToCart({
@@ -91,6 +119,14 @@ export const ProductDetailPage: React.FC = () => {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
+        <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:title" content={seoTitle} />
+        <meta property="og:description" content={seoDescription} />
+        <meta property="og:type" content="product" />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={productStructuredData.image} />
+        <script type="application/ld+json">{JSON.stringify(productStructuredData)}</script>
+        <script type="application/ld+json">{JSON.stringify(breadcrumbStructuredData)}</script>
       </Helmet>
 
       {/* Fil d'Ariane SEO */}

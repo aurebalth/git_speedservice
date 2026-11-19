@@ -85,8 +85,20 @@ export const HomePage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>{SITE_CONFIG.name} | Distribution de Produits d'Hygiène & Soins</title>
-        <meta name="description" content="Retrouvez une sélection complète de marques leaders en couches pour bébés, soins féminins, hygiène adulte et protection pour animaux." />
+        <title>Couches bébé Babylino, hygiène & protections | {SITE_CONFIG.name}</title>
+        <meta name="description" content="Achetez vos couches bébé Babylino et découvrez nos produits d’hygiène : protections pour adultes, hygiène féminine et soins pour animaux. Consultez le catalogue Speed Services." />
+        <link rel="canonical" href="https://speedservices.store/" />
+        <meta property="og:title" content="Couches bébé Babylino, hygiène & protections | Speed Services" />
+        <meta property="og:description" content="Un catalogue de couches bébé et de produits d’hygiène pour toute la famille." />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content="https://speedservices.store/" />
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org', '@type': 'Organization', name: 'Speed Services', url: 'https://speedservices.store/', logo: 'https://speedservices.store/favicon.svg', email: SITE_CONFIG.email, telephone: SITE_CONFIG.phoneRaw,
+          contactPoint: { '@type': 'ContactPoint', telephone: SITE_CONFIG.phoneRaw, contactType: 'customer service', availableLanguage: ['French'] }
+        })}</script>
+        <script type="application/ld+json">{JSON.stringify({
+          '@context': 'https://schema.org', '@type': 'WebSite', name: 'Speed Services', url: 'https://speedservices.store/', inLanguage: 'fr-FR'
+        })}</script>
       </Helmet>
 
       <main className="bg-white text-[#0A0A0A] font-sans overflow-hidden">
@@ -323,6 +335,32 @@ export const HomePage: React.FC = () => {
           </div>
         </section>
 
+
+        {/* Contenu éditorial et liens HTML explorables par les moteurs de recherche */}
+        <section className="py-16 bg-slate-50 border-t border-slate-200">
+          <div className="max-w-6xl mx-auto px-6">
+            <div className="max-w-3xl mx-auto text-center mb-10">
+              <h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4">Couches bébé et produits d’hygiène : trouvez la gamme adaptée</h2>
+              <p className="text-sm md:text-base leading-relaxed text-slate-600">Speed Services réunit plusieurs univers de produits d’hygiène et de protection. Parcourez le catalogue pour comparer les références, les tailles et les conditionnements disponibles, puis consultez chaque fiche produit avant de commander.</p>
+            </div>
+            <div className="grid md:grid-cols-2 gap-6">
+              <article className="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Couches bébé Babylino</h3>
+                <p className="text-sm leading-relaxed text-slate-600 mb-4">Retrouvez les couches bébé Babylino Sensitive et les différentes tailles proposées au catalogue. Pour choisir une taille, vérifiez toujours la fourchette de poids indiquée sur le paquet et la fiche de la référence. Une bonne adaptation dépend aussi de la morphologie et du confort de votre bébé.</p>
+                <Link className="inline-flex text-sm font-semibold text-sky-700 hover:text-sky-900" to="/produit/couches/bebe">Voir toutes les couches bébé Babylino <span aria-hidden="true">→</span></Link>
+              </article>
+              <article className="bg-white rounded-xl border border-slate-200 p-6">
+                <h3 className="text-lg font-bold text-slate-900 mb-3">Hygiène et protections au quotidien</h3>
+                <p className="text-sm leading-relaxed text-slate-600 mb-4">Explorez également les protections d’incontinence pour adultes, les produits d’hygiène féminine et les références PetCare. Chaque univers présente les produits et conditionnements disponibles afin de faciliter votre comparaison.</p>
+                <div className="flex flex-wrap gap-x-4 gap-y-2 text-sm font-semibold">
+                  <Link className="text-sky-700 hover:text-sky-900" to="/produit/incontinence-adultes">Protections adultes</Link>
+                  <Link className="text-sky-700 hover:text-sky-900" to="/produit/hygiene-feminine">Hygiène féminine</Link>
+                  <Link className="text-sky-700 hover:text-sky-900" to="/produit/petcare">PetCare</Link>
+                </div>
+              </article>
+            </div>
+          </div>
+        </section>
       </main>
     </>
   );

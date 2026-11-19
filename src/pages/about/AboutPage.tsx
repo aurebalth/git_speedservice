@@ -38,7 +38,12 @@ export const AboutPage: React.FC = () => {
   return (
     <>
       <Helmet>
-        <title>À propos de nous | {SITE_CONFIG.name}</title>
+        <title>À propos de Speed Services | Distribution de produits d’hygiène</title>
+        <link rel="canonical" href="https://speedservices.store/about" />
+        <meta property="og:title" content="À propos de Speed Services | Distribution de produits d’hygiène" />
+        <meta property="og:description" content="Découvrez Speed Services, son engagement et sa sélection de produits d’hygiène et de protection." />
+        <meta property="og:url" content="https://speedservices.store/about" />
+        <meta property="og:type" content="website" />
         <meta name="description" content="Découvrez l'histoire, les valeurs et l'engagement de Speed Services Distribution dans la fourniture de produits d'hygiène et de soins de qualité." />
       </Helmet>
 
