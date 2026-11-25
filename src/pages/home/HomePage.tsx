@@ -7,6 +7,7 @@ import { FEMALE_CATALOG } from '../../data/femaleCatalog';
 import { ADULT_CATALOG } from '../../data/adultCatalog';
 import { PET_CATALOG } from '../../data/petCatalog';
 import { getCatalogBrands } from '../../data/catalogUtils';
+import { PricePromisePopup } from '../../components/PricePromisePopup';
 import { 
   ArrowRight, 
   ChevronRight, 
@@ -154,6 +155,9 @@ export const HomePage: React.FC = () => {
           '@context': 'https://schema.org', '@type': 'WebSite', name: 'Speed Services', url: 'https://speedservices.store/', inLanguage: 'fr-FR'
         })}</script>
       </Helmet>
+
+      {/* Le composant visuel reste hors de Helmet : Helmet ne sert qu'aux balises du <head>. */}
+      <PricePromisePopup isBlocked={Boolean(selectedUniverse)} />
 
       <main className="bg-white text-[#0A0A0A] font-sans overflow-hidden">
         
