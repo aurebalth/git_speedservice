@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { BABY_CATALOG } from '../../data/babyCatalog';
@@ -6,7 +6,9 @@ import { FEMALE_CATALOG } from '../../data/femaleCatalog';
 import { ADULT_CATALOG } from '../../data/adultCatalog';
 import { PET_CATALOG } from '../../data/petCatalog';
 import { SITE_CONFIG } from '../../data/siteConfig';
-import { Phone, ArrowLeft, CheckCircle2, Sparkles, ShieldCheck, ShoppingBag, Truck, Award, Plus, Minus } from 'lucide-react';
+import { getBrandSlug, getVariantBrand } from '../../data/catalogUtils';
+import { buildProductSeo, formatSeoPrice, getAbsoluteSeoImage, getPackUnitCount, getPricePerBabyDiaper, SEO_SITE_URL } from '../../data/seoUtils';
+import { ArrowLeft, CheckCircle2, Sparkles, ShieldCheck, ShoppingBag, Truck, Award, Plus, Minus } from 'lucide-react';
 import { useCart } from '../../context/CartContext';
 
 const ALL_CATALOGS = [
@@ -20,6 +22,8 @@ export const ProductDetailPage: React.FC = () => {
   const { productSlug } = useParams<{ productSlug: string }>();
   const { addToCart } = useCart();
   const [selectedQty, setSelectedQty] = useState(1);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  useEffect(() => { setSelectedImage(null); setSelectedQty(1); }, [productSlug]);
 
   let parentCategory: any = null;
   let variant: any = null;
@@ -56,7 +60,15 @@ export const ProductDetailPage: React.FC = () => {
     return '/';
   };
 
-  const categoryUrl = getCategoryRoute(parentCategory);
+  const brandName = getVariantBrand(parentCategory, variant);
+  const categoryRoute = getCategoryRoute(parentCategory);
+  const universeRoute = categoryRoute.replace(new RegExp(`/${parentCategory.id}$`), '');
+  const brandUrl = `${universeRoute}/marque/${getBrandSlug(brandName)}`;
+  const productGallery = Array.from(new Set([variant.image, ...(parentCategory.galleryImages || [])].filter(Boolean)));
+  const mainProductImage = selectedImage && productGallery.includes(selectedImage) ? selectedImage : variant.image;
+  const seoData = buildProductSeo(parentCategory, variant, brandName);
+  const packageUnitCount = getPackUnitCount(variant.label || '');
+  const pricePerBabyDiaper = getPricePerBabyDiaper(parentCategory, variant);
 
   const relatedProducts = ALL_CATALOGS.flatMap((cat) =>
     cat.variants.map((v: any) => ({
@@ -64,43 +76,53 @@ export const ProductDetailPage: React.FC = () => {
       categoryName: cat.name,
       subCategory: cat.subCategory,
       categoryId: cat.id,
+      brand: getVariantBrand(cat, v),
       variantSlug: v.slug || v.label.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, ''),
-      crossSellTag: cat.id === parentCategory.id ? 'Variante Similaire' : 'Complément Recommandé'
+      crossSellTag: cat.id === parentCategory.id ? 'Variante similaire' : 'À découvrir'
     }))
   )
     .filter((v) => v.sku !== variant.sku)
-    .sort(() => 0.5 - Math.random())
+    .sort((a, b) => Number(b.brand === brandName) - Number(a.brand === brandName) || Number(b.categoryId === parentCategory.id) - Number(a.categoryId === parentCategory.id))
     .slice(0, 3);
 
-  const seoTitle = `${variant.label} | ${parentCategory.name} - ${SITE_CONFIG.name}`;
-  const seoDescription = `${variant.detailedDescription || parentCategory.description} Consultez le prix et les caractéristiques de cette référence chez Speed Services.`.slice(0, 155);
-  const canonicalUrl = `https://speedservices.store/produit/detail/${productSlug}`;
+  const seoTitle = seoData.title;
+  const seoDescription = seoData.description;
+  const canonicalUrl = `${SEO_SITE_URL}/produit/detail/${productSlug}`;
+  const productImageUrls = productGallery.map((image: string) => getAbsoluteSeoImage(image)).filter(Boolean);
+  const productDescription = variant.detailedDescription || parentCategory.description;
   const productStructuredData = {
     '@context': 'https://schema.org',
     '@type': 'Product',
-    name: variant.label,
-    description: variant.detailedDescription || parentCategory.description,
+    name: seoData.completeName,
+    description: productDescription,
     sku: variant.sku,
-    image: variant.image?.startsWith('http') ? variant.image : `https://speedservices.store${variant.image}`,
-    category: parentCategory.subCategory,
-    brand: { '@type': 'Brand', name: parentCategory.name },
+    image: productImageUrls,
+    url: canonicalUrl,
+    category: `${parentCategory.subCategory} – ${parentCategory.name}`,
+    brand: { '@type': 'Brand', name: brandName },
+    additionalProperty: [
+      ...(packageUnitCount ? [{ '@type': 'PropertyValue', name: 'Nombre d’unités par paquet', value: packageUnitCount }] : []),
+      ...(pricePerBabyDiaper !== null ? [{ '@type': 'PropertyValue', name: 'Prix par couche', value: `${formatSeoPrice(pricePerBabyDiaper)} EUR` }] : []),
+    ],
     offers: {
       '@type': 'Offer',
       url: canonicalUrl,
       priceCurrency: 'EUR',
       price: Number(variant.price).toFixed(2),
       availability: variant.inStock ? 'https://schema.org/InStock' : 'https://schema.org/OutOfStock',
-      itemCondition: 'https://schema.org/NewCondition'
-    }
+      itemCondition: 'https://schema.org/NewCondition',
+      seller: { '@type': 'Organization', name: SITE_CONFIG.name, url: SEO_SITE_URL },
+    },
   };
   const breadcrumbStructuredData = {
     '@context': 'https://schema.org', '@type': 'BreadcrumbList',
     itemListElement: [
-      { '@type': 'ListItem', position: 1, name: 'Accueil', item: 'https://speedservices.store/' },
-      { '@type': 'ListItem', position: 2, name: parentCategory.subCategory, item: `https://speedservices.store${categoryUrl}` },
-      { '@type': 'ListItem', position: 3, name: parentCategory.name, item: `https://speedservices.store${categoryUrl}` },
-      { '@type': 'ListItem', position: 4, name: variant.label, item: canonicalUrl }
-    ]
+      { '@type': 'ListItem', position: 1, name: 'Accueil', item: `${SEO_SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: parentCategory.subCategory, item: `${SEO_SITE_URL}${universeRoute}` },
+      { '@type': 'ListItem', position: 3, name: brandName, item: `${SEO_SITE_URL}${brandUrl}` },
+      { '@type': 'ListItem', position: 4, name: parentCategory.name, item: `${SEO_SITE_URL}${categoryRoute}` },
+      { '@type': 'ListItem', position: 5, name: seoData.completeName, item: canonicalUrl },
+    ],
   };
 
   const handleAddToCart = () => {
@@ -119,12 +141,20 @@ export const ProductDetailPage: React.FC = () => {
       <Helmet>
         <title>{seoTitle}</title>
         <meta name="description" content={seoDescription} />
+        <meta name="robots" content="index,follow,max-image-preview:large" />
         <link rel="canonical" href={canonicalUrl} />
+        <meta property="og:site_name" content="Speed Services" />
+        <meta property="og:locale" content="fr_FR" />
         <meta property="og:title" content={seoTitle} />
         <meta property="og:description" content={seoDescription} />
         <meta property="og:type" content="product" />
         <meta property="og:url" content={canonicalUrl} />
-        <meta property="og:image" content={productStructuredData.image} />
+        <meta property="og:image" content={productImageUrls[0] || `${SEO_SITE_URL}/fond.png`} />
+        <meta property="og:image:alt" content={`${brandName} – ${seoData.completeName}`} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={seoTitle} />
+        <meta name="twitter:description" content={seoDescription} />
+        <meta name="twitter:image" content={productImageUrls[0] || `${SEO_SITE_URL}/fond.png`} />
         <script type="application/ld+json">{JSON.stringify(productStructuredData)}</script>
         <script type="application/ld+json">{JSON.stringify(breadcrumbStructuredData)}</script>
       </Helmet>
@@ -134,11 +164,9 @@ export const ProductDetailPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center gap-2 overflow-x-auto whitespace-nowrap">
           <Link to="/" className="hover:text-white transition-colors">Accueil</Link>
           <span>/</span>
-          <span className="text-slate-400">{parentCategory.subCategory}</span>
+          <Link to={universeRoute} className="text-slate-400 hover:text-white transition-colors">{parentCategory.subCategory}</Link>
           <span>/</span>
-          <Link to={categoryUrl} className="hover:text-white transition-colors">
-            {parentCategory.name}
-          </Link>
+          <Link to={brandUrl} className="hover:text-white transition-colors">{brandName}</Link>
           <span>/</span>
           <span className="text-sky-400 font-bold">{variant.label}</span>
         </div>
@@ -149,27 +177,35 @@ export const ProductDetailPage: React.FC = () => {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
             
-            {/* Visuel du Produit */}
-            <div className="lg:col-span-6 bg-slate-50 border border-slate-200 rounded-3xl p-10 flex items-center justify-center min-h-[480px] relative shadow-sm">
-              <span className="absolute top-5 left-5 bg-slate-900 text-white text-xs font-mono font-bold px-3.5 py-1.5 rounded-full uppercase tracking-wider">
-                SKU : {variant.sku}
-              </span>
-              <img
-                src={variant.image}
-                alt={variant.label}
-                className="max-h-[400px] max-w-full object-contain hover:scale-105 transition-transform duration-300"
-                onError={(e) => {
-                  (e.target as HTMLElement).style.display = 'none';
-                }}
-              />
-              <div className="absolute bottom-5 left-5 right-5 flex justify-between items-center bg-white/90 backdrop-blur-md px-4 py-2.5 rounded-xl border border-slate-200 text-xs font-semibold text-slate-700">
-                <span className="flex items-center gap-1.5 text-emerald-700">
-                  <ShieldCheck size={16} /> Qualité Certifiée & Testée
+            {/* Visuel principal et galerie des contenus produits fournis */}
+            <div className="lg:col-span-6">
+              <div className="bg-slate-50 border border-slate-200 rounded-3xl p-6 sm:p-10 flex items-center justify-center min-h-[380px] sm:min-h-[480px] relative shadow-sm">
+                <span className="absolute top-4 left-4 sm:top-5 sm:left-5 bg-slate-900 text-white text-[10px] sm:text-xs font-mono font-bold px-3 py-1.5 rounded-full uppercase tracking-wider">
+                  SKU : {variant.sku}
                 </span>
-                <span className="flex items-center gap-1.5 text-slate-600">
-                  <Truck size={16} /> Expédition B2B Rapide
-                </span>
+                <img
+                  src={mainProductImage}
+                  alt={`${brandName} ${parentCategory.name} – ${variant.label}`}
+                  className="max-h-[360px] sm:max-h-[400px] max-w-full object-contain transition-transform duration-300"
+                  onError={(e) => { (e.target as HTMLElement).style.display = 'none'; }}
+                />
+                <div className="absolute bottom-4 left-4 right-4 sm:bottom-5 sm:left-5 sm:right-5 flex flex-wrap justify-between items-center gap-2 bg-white/95 backdrop-blur-md px-3 sm:px-4 py-2.5 rounded-xl border border-slate-200 text-[10px] sm:text-xs font-semibold text-slate-700">
+                  <span className="flex items-center gap-1.5 text-emerald-700"><ShieldCheck size={15} /> Informations produit</span>
+                  <span className="flex items-center gap-1.5 text-slate-600"><Truck size={15} /> Livraison en France</span>
+                </div>
               </div>
+              {productGallery.length > 1 && (
+                <div className="mt-4">
+                  <p className="mb-2 text-[11px] font-bold uppercase tracking-wider text-slate-500">Visuels complémentaires et informations fabricant</p>
+                  <div className="grid grid-cols-4 gap-2 sm:grid-cols-5">
+                    {productGallery.map((image: string, index: number) => (
+                      <button key={image} type="button" onClick={() => setSelectedImage(image)} aria-label={`Afficher le visuel ${index + 1}`} className={`flex aspect-square items-center justify-center overflow-hidden rounded-xl border bg-white p-2 transition ${mainProductImage === image ? 'border-sky-500 ring-2 ring-sky-100' : 'border-slate-200 hover:border-sky-300'}`}>
+                        <img src={image} alt={`${brandName} ${parentCategory.name} – visuel complémentaire ${index + 1}`} className="max-h-full max-w-full object-contain" loading="lazy" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Informations & Bloc Prix E-commerce */}
@@ -178,23 +214,26 @@ export const ProductDetailPage: React.FC = () => {
                 <span className="bg-sky-50 text-sky-700 border border-sky-200 text-xs font-bold px-3 py-1 rounded-full uppercase tracking-wider">
                   {parentCategory.subCategory}
                 </span>
-                <span className="text-xs text-slate-400 font-medium">Gamme : {parentCategory.name}</span>
+                <span className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-bold text-slate-700">Marque : {brandName}</span>
               </div>
 
               <h1 className="text-3xl md:text-4xl font-black text-slate-900 tracking-tight mb-4">
-                {variant.label}
+                {seoData.completeName}
               </h1>
 
               {/* PRIX ET BOUTONS D'ACTION E-COMMERCE */}
               <div className="bg-slate-900 text-white rounded-2xl p-6 shadow-xl border border-slate-800 mb-6">
                 <div className="flex flex-wrap items-baseline justify-between gap-4 mb-5 pb-4 border-b border-slate-800">
                   <div>
-                    <span className="text-4xl font-black text-white">
-                      {variant.price.toFixed(2)} €
-                    </span>
+                    <div>
+                      <span className="mb-1 block text-[10px] font-bold uppercase tracking-wider text-slate-400">Prix TTC</span>
+                      <span className="text-4xl font-black text-white">{formatSeoPrice(variant.price)} €</span>
+                      {pricePerBabyDiaper !== null && <span className="mt-1 block text-xs font-semibold text-emerald-300">Soit {formatSeoPrice(pricePerBabyDiaper)} € par couche{packageUnitCount ? ` · ${packageUnitCount} couches` : ''}</span>}
+                      {packageUnitCount && pricePerBabyDiaper === null && <span className="mt-1 block text-xs text-slate-300">Conditionnement : {packageUnitCount} unités</span>}
+                    </div>
                   </div>
-                  <span className="bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 text-xs px-3 py-1.5 rounded-full font-bold">
-                    En stock disponible
+                  <span className={`${variant.inStock ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-slate-700 text-slate-300 border-slate-600'} border text-xs px-3 py-1.5 rounded-full font-bold`}>
+                    {variant.inStock ? 'En stock' : 'Actuellement indisponible'}
                   </span>
                 </div>
 
@@ -220,7 +259,8 @@ export const ProductDetailPage: React.FC = () => {
 
                     <button
                       onClick={handleAddToCart}
-                      className="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-sky-500/20 text-sm cursor-pointer"
+                      disabled={!variant.inStock}
+                      className="flex-1 bg-sky-500 hover:bg-sky-400 text-slate-950 font-black py-4 px-6 rounded-xl flex items-center justify-center gap-2 transition-all shadow-lg shadow-sky-500/20 text-sm cursor-pointer disabled:cursor-not-allowed disabled:bg-slate-500 disabled:text-slate-200"
                     >
                       <ShoppingBag size={18} /> Ajouter au panier
                     </button>
@@ -230,9 +270,10 @@ export const ProductDetailPage: React.FC = () => {
 
               {/* Description détaillée et professionnelle */}
               <div className="prose prose-slate text-slate-600 text-base leading-relaxed mb-6 space-y-3">
-                <p>{variant.detailedDescription || parentCategory.description}</p>
+                <h2 className="text-lg font-bold text-slate-900">À propos de cette référence {brandName}</h2>
+                <p>{productDescription}</p>
                 <p>
-                  Ce produit professionnel répond aux exigences strictes des établissements de santé et des revendeurs spécialisés. Conçu pour garantir un confort optimal, il intègre des composants de haute technologie testés dermatologiquement.
+                  Cette fiche réunit les informations disponibles pour la référence {variant.sku}, son conditionnement et son prix TTC. Vérifiez la taille, la plage de poids ou le format indiqués sur l’emballage avant de choisir.
                 </p>
               </div>
 
@@ -263,14 +304,14 @@ export const ProductDetailPage: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-end justify-between mb-10 gap-4">
             <div>
               <span className="inline-flex items-center gap-1.5 text-xs font-bold text-sky-700 bg-sky-50 border border-sky-200 px-3 py-1.5 rounded-full mb-2">
-                <Sparkles size={14} /> Suggestions Intelligentes & Cross-Selling
+                <Sparkles size={14} /> À découvrir aussi
               </span>
               <h2 className="text-2xl md:text-3xl font-black text-slate-900">
-                Produits Similaires et Associations Recommandées
+                D’autres références à découvrir
               </h2>
             </div>
             <p className="text-slate-500 text-sm max-w-md">
-              Optimisez votre approvisionnement avec des références complémentaires fréquemment associées par les professionnels.
+              Découvrez d’autres tailles, formats et produits de la même marque ou d’autres univers du catalogue.
             </p>
           </div>
 
@@ -287,7 +328,7 @@ export const ProductDetailPage: React.FC = () => {
                       SKU : {relProduct.sku}
                     </span>
                     <span className={`text-xs font-bold px-3 py-1 rounded-full ${
-                      relProduct.crossSellTag === 'Variante Similaire' 
+                      relProduct.crossSellTag === 'Variante similaire' 
                         ? 'bg-sky-50 text-sky-700 border border-sky-200' 
                         : 'bg-purple-50 text-purple-700 border border-purple-200'
                     }`}>
@@ -301,7 +342,7 @@ export const ProductDetailPage: React.FC = () => {
                   >
                     <img
                       src={relProduct.image}
-                      alt={relProduct.label}
+                      alt={`${relProduct.brand} ${relProduct.categoryName} – ${relProduct.label}`}
                       className="max-h-full max-w-full object-contain group-hover:scale-105 transition-transform"
                       onError={(e) => {
                         (e.target as HTMLElement).style.display = 'none';
@@ -310,7 +351,7 @@ export const ProductDetailPage: React.FC = () => {
                   </Link>
 
                   <span className="text-xs font-bold text-sky-600 uppercase tracking-wider block mb-1">
-                    {relProduct.subCategory}
+                    {relProduct.subCategory} · {relProduct.brand}
                   </span>
                   <h3 className="font-bold text-slate-900 text-base mb-2 line-clamp-2 hover:text-sky-600 transition-colors">
                     <Link to={`/produit/detail/${relProduct.variantSlug}`}>
@@ -324,8 +365,8 @@ export const ProductDetailPage: React.FC = () => {
 
                 <div className="pt-4 border-t border-slate-100 flex items-center justify-between mt-auto">
                   <div>
-                    <span className="text-[10px] font-bold text-slate-400 uppercase block">Tarif HT</span>
-                    <span className="text-xl font-black text-slate-900">{relProduct.price.toFixed(2)} €</span>
+                    <span className="text-[10px] font-bold text-slate-400 uppercase block">Prix TTC</span>
+                    <span className="text-xl font-black text-slate-900">{formatSeoPrice(relProduct.price)} €</span>
                   </div>
 
                   <Link

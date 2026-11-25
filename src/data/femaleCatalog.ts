@@ -6,10 +6,13 @@ export interface ProductVariant {
   inStock: boolean;
   image: string;
   detailedDescription: string;
+  brand?: string;
 }
 
 export interface FemaleProduct {
   id: string;
+  brand?: string;
+  galleryImages?: string[];
   name: string;
   category: string;
   subCategory: string;
@@ -22,6 +25,7 @@ export interface FemaleProduct {
 export const FEMALE_CATALOG: FemaleProduct[] = [
   {
     id: "everyday-sensitive-cotton",
+    brand: "EveryDay",
     name: "Serviettes Hygiéniques Ultra EveryDay Sensitive Cotton",
     category: "feminin",
     subCategory: "Serviettes Ultra Sensitive Cotton",
@@ -73,6 +77,7 @@ export const FEMALE_CATALOG: FemaleProduct[] = [
   },
   {
     id: "everyday-hyperdry",
+    brand: "EveryDay",
     name: "Serviettes Hygiéniques Ultra EveryDay HyperDry",
     category: "feminin",
     subCategory: "Serviettes Ultra HyperDry",
@@ -124,6 +129,7 @@ export const FEMALE_CATALOG: FemaleProduct[] = [
   },
   {
     id: "salvaslip",
+    brand: "EveryDay",
     name: "Protège-slips EveryDay All Cotton & Natura",
     category: "feminin",
     subCategory: "Protège-slips",
@@ -175,6 +181,7 @@ export const FEMALE_CATALOG: FemaleProduct[] = [
   },
   {
     id: "salviettine-struccanti-pompon",
+    brand: "Pom Pon",
     name: "Lingettes Démaquillantes Pom Pon (Visage et Yeux)",
     category: "feminin",
     subCategory: "Lingettes Démaquillantes PomPon",

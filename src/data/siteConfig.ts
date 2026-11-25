@@ -3,11 +3,11 @@ export const SITE_CONFIG = {
   phoneDisplay: "07 73 59 46 30",
   phoneRaw: "+33773594630",
   email: "contact@brandscollectionsbv.com",
-  tagline: "Livraison Rapide de Couches & Produits d'Hygiène",
+  tagline: "Boutique multi-marques de couches, hygiène et protections à prix compétitifs",
   categories: [
-    "Couches Bébés",
-    "Incontinence Adultes",
-    "Couches Animaux",
-    "Lingettes & Soins"
+    "Bébé & Enfant",
+    "Hygiène féminine",
+    "Incontinence & protections adultes",
+    "Animaux & entretien"
   ]
 };

@@ -6,10 +6,13 @@ export interface ProductVariant {
   inStock: boolean;
   image: string;
   detailedDescription: string;
+  brand?: string;
 }
 
 export interface PetProduct {
   id: string;
+  brand?: string;
+  galleryImages?: string[];
   name: string;
   category: string;
   subCategory: string;
@@ -22,6 +25,7 @@ export interface PetProduct {
 export const PET_CATALOG: PetProduct[] = [
   {
     id: "rispet-traverse",
+    brand: "RISPET",
     name: "Tapis Hygiéniques Absorbants RISPET",
     category: "petcare",
     subCategory: "Traverse & Tapis Animaux",
@@ -64,6 +68,7 @@ export const PET_CATALOG: PetProduct[] = [
   },
   {
     id: "rispet-salviettine",
+    brand: "RISPET",
     name: "Lingettes Hygiéniques RISPET pour Animaux",
     category: "petcare",
     subCategory: "Salviettine Animaux",
@@ -106,6 +111,7 @@ export const PET_CATALOG: PetProduct[] = [
   },
   {
     id: "rispet-shampoo",
+    brand: "RISPET",
     name: "Shampooing & Baume RISPET",
     category: "petcare",
     subCategory: "Shampooing & Gants Animaux",
@@ -148,6 +154,7 @@ export const PET_CATALOG: PetProduct[] = [
   },
   {
     id: "rispet-homecare",
+    brand: "RISPET",
     name: "Entretien Maison & Poils RISPET HomeCare",
     category: "petcare",
     subCategory: "Entretien Maison & Poils",

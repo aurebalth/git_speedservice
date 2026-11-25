@@ -11,6 +11,32 @@ interface LegalPageProps {
 export const LegalPage: React.FC<LegalPageProps> = ({ activeTab = 'mentions' }) => {
   const [searchParams, setSearchParams] = useSearchParams();
   const currentTab = searchParams.get('tab') || activeTab;
+  const legalSeo = {
+    mentions: {
+      title: 'Mentions légales | Speed Services',
+      description: 'Consultez les informations légales relatives à Speed Services Distribution, à l’éditeur du site et aux moyens de contact.',
+      canonical: 'https://speedservices.store/mentions-legales',
+    },
+    confidentialite: {
+      title: 'Politique de confidentialité | Speed Services',
+      description: 'Informations sur les données personnelles, leur utilisation, leur protection et les droits des utilisateurs de Speed Services.',
+      canonical: 'https://speedservices.store/politique-de-confidentialite',
+    },
+    cgv: {
+      title: 'Conditions générales de vente | Speed Services',
+      description: 'Consultez les conditions générales applicables aux commandes, aux paiements, à la livraison et aux ventes Speed Services.',
+      canonical: 'https://speedservices.store/conditions-generales-de-vente',
+    },
+    remboursement: {
+      title: 'Retours et remboursements | Speed Services',
+      description: 'Consultez la politique de retours, de réclamations, de remboursements et d’avoirs de Speed Services.',
+      canonical: 'https://speedservices.store/politique-de-remboursement',
+    },
+  }[currentTab as 'mentions' | 'confidentialite' | 'cgv' | 'remboursement'] || {
+    title: 'Informations légales | Speed Services',
+    description: 'Informations légales et réglementaires de Speed Services.',
+    canonical: 'https://speedservices.store/mentions-legales',
+  };
 
   const setTab = (tabName: string) => {
     setSearchParams({ tab: tabName });
@@ -20,8 +46,15 @@ export const LegalPage: React.FC<LegalPageProps> = ({ activeTab = 'mentions' }) 
   return (
     <>
       <Helmet>
-        <title>Informations Légales & Réglementaires | {SITE_CONFIG.name}</title>
-        <meta name="description" content="Mentions légales, politique de confidentialité, conditions générales de vente et politique de remboursement de Brands Collection B.V. (Speed Services Distribution)." />
+        <title>{legalSeo.title}</title>
+        <meta name="description" content={legalSeo.description} />
+        <meta name="robots" content="index,follow" />
+        <link rel="canonical" href={legalSeo.canonical} />
+        <meta property="og:site_name" content={SITE_CONFIG.name} />
+        <meta property="og:title" content={legalSeo.title} />
+        <meta property="og:description" content={legalSeo.description} />
+        <meta property="og:type" content="website" />
+        <meta property="og:url" content={legalSeo.canonical} />
       </Helmet>
 
       {/* En-tête de la page */}
@@ -152,7 +185,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ activeTab = 'mentions' }) 
               </div>
 
               <p>
-                Les présentes conditions générales régissent l'ensemble des ventes de produits d'hygiène et de grande consommation (marques Babylino, Iasi, EveryDay, Rispet) réalisées par la société <strong>Brands Collection B.V.</strong> sous le nom commercial <strong>Speed Services Distribution</strong>.
+                Les présentes conditions générales régissent l'ensemble des ventes de produits d'hygiène et de grande consommation proposés au catalogue réalisées par la société <strong>Brands Collection B.V.</strong> sous le nom commercial <strong>Speed Services Distribution</strong>.
               </p>
 
               <div className="space-y-6">
@@ -223,7 +256,7 @@ export const LegalPage: React.FC<LegalPageProps> = ({ activeTab = 'mentions' }) 
                 <div>
                   <h3 className="font-bold text-slate-900 text-base mb-1">3. Conditions d'Acceptation des Retours</h3>
                   <ul className="list-disc pl-5 text-xs md:text-sm text-slate-600 space-y-1 mt-1">
-                    <li>Les paquets et cartons de produits d'hygiène (Babylino, Iasi, EveryDay, Rispet) doivent être <strong>scellés, d'origine et intacts</strong> pour des raisons dermatologiques et de conformité sanitaire.</li>
+                    <li>Les paquets et cartons de produits d'hygiène doivent être <strong>scellés, d'origine et intacts</strong> pour des raisons dermatologiques et de conformité sanitaire.</li>
                     <li>Aucun retour de lot entamé ou ouvert ne sera accepté.</li>
                     <li>Tout retour spontané non validé préalable par notre service support sera refusé par nos entrepôts.</li>
                   </ul>

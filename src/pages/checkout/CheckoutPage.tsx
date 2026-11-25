@@ -273,6 +273,7 @@ export const CheckoutPage: React.FC = () => {
           name="description"
           content="Finalisez votre commande Speed Services et procédez à votre paiement sécurisé."
         />
+        <meta name="robots" content="noindex,nofollow" />
       </Helmet>
 
       <section className="py-12 bg-slate-50 min-h-screen">

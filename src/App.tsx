@@ -53,12 +53,16 @@ function App() {
               {/* Routes Produits & Catégories (Gère à la fois le Hub et le détail de sous-catégorie) */}
               <Route path="/produit/detail/:productSlug" element={<ProductDetailPage />} />
               <Route path="/produit/couches/bebe" element={<CategoryPage />} />
+              <Route path="/produit/couches/bebe/marque/:brandSlug" element={<CategoryPage />} />
               <Route path="/produit/couches/bebe/:categoryId" element={<CategoryPage />} />
               <Route path="/produit/hygiene-feminine" element={<CategoryPage />} />
+              <Route path="/produit/hygiene-feminine/marque/:brandSlug" element={<CategoryPage />} />
               <Route path="/produit/hygiene-feminine/:categoryId" element={<CategoryPage />} />
               <Route path="/produit/incontinence-adultes" element={<CategoryPage />} />
+              <Route path="/produit/incontinence-adultes/marque/:brandSlug" element={<CategoryPage />} />
               <Route path="/produit/incontinence-adultes/:categoryId" element={<CategoryPage />} />
               <Route path="/produit/petcare" element={<CategoryPage />} />
+              <Route path="/produit/petcare/marque/:brandSlug" element={<CategoryPage />} />
               <Route path="/produit/petcare/:categoryId" element={<CategoryPage />} />
             </Routes>
           </main>

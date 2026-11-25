@@ -1,6 +1,5 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
-import { SITE_CONFIG } from '../../data/siteConfig';
 import { 
   ShieldCheck, 
   Truck, 
@@ -16,12 +15,12 @@ export const AboutPage: React.FC = () => {
     {
       icon: ShieldCheck,
       title: "Exigence & Qualité",
-      desc: "Nous sélectionnons rigoureusement des marques de renom (Babylino, EveryDay, IASI, RisPET) reconnues pour leurs standards élevés et leurs certifications dermatologiques strictes."
+      desc: "Nous construisons un catalogue multi-marques qui évolue au fil des références disponibles, avec des produits pour bébé, l’hygiène féminine, les protections adultes et les animaux."
     },
     {
       icon: Truck,
       title: "Logistique & Réactivité",
-      desc: "Grâce à une organisation logistique rigoureuse, nous garantissons un traitement fluide de vos commandes et une disponibilité constante de nos gammes."
+      desc: "Nous veillons à présenter clairement les références, les conditionnements, les disponibilités et les informations utiles au suivi de chaque commande."
     },
     {
       icon: Award,
@@ -30,21 +29,25 @@ export const AboutPage: React.FC = () => {
     },
     {
       icon: Globe,
-      title: "Engagement Durable",
-      desc: "Nos produits phares intègrent des matériaux écologiques, des voiles 100% coton et des compositions respectueuses de l'environnement et de la peau."
+      title: "Informations produit",
+      desc: "Les caractéristiques et engagements propres à chaque produit sont présentés sur sa fiche afin de vous aider à comparer les références en toute clarté."
     }
   ];
 
   return (
     <>
       <Helmet>
-        <title>À propos de Speed Services | Distribution de produits d’hygiène</title>
+        <title>À propos de Speed Services | Boutique d’hygiène multi-marques</title>
+        <meta name="description" content="Découvrez Speed Services, une boutique en ligne multi-marques de couches bébé, hygiène féminine, protections adultes et produits pour animaux. Prix affichés TTC." />
+        <meta name="robots" content="index,follow,max-image-preview:large" />
         <link rel="canonical" href="https://speedservices.store/about" />
-        <meta property="og:title" content="À propos de Speed Services | Distribution de produits d’hygiène" />
-        <meta property="og:description" content="Découvrez Speed Services, son engagement et sa sélection de produits d’hygiène et de protection." />
+        <meta property="og:site_name" content="Speed Services" />
+        <meta property="og:locale" content="fr_FR" />
+        <meta property="og:title" content="À propos de Speed Services | Boutique d’hygiène multi-marques" />
+        <meta property="og:description" content="Découvrez Speed Services et sa sélection multi-marques de produits d’hygiène et de protection à prix TTC." />
         <meta property="og:url" content="https://speedservices.store/about" />
         <meta property="og:type" content="website" />
-        <meta name="description" content="Découvrez l'histoire, les valeurs et l'engagement de Speed Services Distribution dans la fourniture de produits d'hygiène et de soins de qualité." />
+        <meta name="twitter:card" content="summary" />
       </Helmet>
 
       <main className="bg-white text-[#0A0A0A] font-sans">
@@ -68,7 +71,7 @@ export const AboutPage: React.FC = () => {
               L'excellence au cœur de la distribution d'hygiène et de soins
             </h1>
             <p className="text-white/90 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed drop-shadow">
-              Speed Services Distribution s'impose comme un acteur incontournable dans la mise à disposition de produits de grande consommation haut de gamme.
+              Speed Services Distribution développe une boutique en ligne multi-marques dédiée aux produits d'hygiène et de protection.
             </p>
           </div>
         </section>
@@ -84,20 +87,20 @@ export const AboutPage: React.FC = () => {
                   Une vision moderne de la distribution, centrée sur le bien-être et la qualité.
                 </h2>
                 <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-                  Fondée avec l'ambition de simplifier l'accès aux meilleures solutions d'hygiène et de protection, **Speed Services Distribution** s'attache à connecter les foyers et les professionnels aux fabricants européens les plus exigeants.
+                  Speed Services Distribution développe une boutique en ligne multi-marques dédiée aux produits d’hygiène et de protection. Notre objectif est de rendre le catalogue facile à parcourir, avec des univers distincts et des informations claires sur chaque référence.
                 </p>
                 <p className="text-gray-600 text-sm md:text-base leading-relaxed">
-                  De la petite enfance avec les gammes hypoallergéniques Babylino jusqu'aux soins spécialisés pour adultes et animaux (RisPET), chaque référence de notre catalogue est choisie pour son niveau de performance, sa sécurité dermatologique et son respect de l'environnement.
+                  Le catalogue couvre plusieurs besoins du quotidien : produits pour bébé et enfant, hygiène féminine, protections pour adultes et articles pour animaux. De nouvelles marques et références peuvent être ajoutées sans changer l’organisation de la boutique.
                 </p>
                 
                 <div className="pt-2 flex flex-wrap gap-4">
                   <div className="flex items-center space-x-2 text-sm font-semibold text-gray-800">
                     <CheckCircle2 className="w-5 h-5 text-sky-600" />
-                    <span>Marques Certifiées EU</span>
+                    <span>Catalogue multi-marques</span>
                   </div>
                   <div className="flex items-center space-x-2 text-sm font-semibold text-gray-800">
                     <CheckCircle2 className="w-5 h-5 text-sky-600" />
-                    <span>Écoute & Service Client</span>
+                    <span>Service client accessible</span>
                   </div>
                 </div>
               </div>
@@ -111,8 +114,8 @@ export const AboutPage: React.FC = () => {
                   />
                 </div>
                 <div className="absolute -bottom-6 -left-6 bg-[#003366] text-white p-6 rounded-sm shadow-lg hidden sm:block">
-                  <p className="text-2xl font-black text-[#60A5FA]">100%</p>
-                  <p className="text-xs text-white/80 mt-1">Engagement Qualité & Transparence</p>
+                  <p className="text-lg font-black text-[#60A5FA]">Multi-marques</p>
+                  <p className="text-xs text-white/80 mt-1">Plusieurs univers, un seul site</p>
                 </div>
               </div>
 

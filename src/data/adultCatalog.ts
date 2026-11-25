@@ -6,10 +6,13 @@ export interface ProductVariant {
   inStock: boolean;
   image: string;
   detailedDescription: string;
+  brand?: string;
 }
 
 export interface AdultProduct {
   id: string;
+  brand?: string;
+  galleryImages?: string[];
   name: string;
   category: string;
   subCategory: string;
@@ -19,9 +22,10 @@ export interface AdultProduct {
   variants: ProductVariant[];
 }
 
-export const ADULT_CATALOG: AdultProduct[] = [
+const BASE_ADULT_CATALOG: AdultProduct[] = [
   {
     id: "iasi-donna-assorbenti",
+    brand: "IASI",
     name: "Protections Anatomiques Femme IASI Discreet LADY",
     category: "adulte",
     subCategory: "Protections Incontinence Femme",
@@ -64,6 +68,7 @@ export const ADULT_CATALOG: AdultProduct[] = [
   },
   {
     id: "iasi-pants-lady",
+    brand: "IASI",
     name: "Culottes Absorbantes Femme IASI Pants LADY",
     category: "adulte",
     subCategory: "Culottes Absorbantes Femme (Pants)",
@@ -106,6 +111,7 @@ export const ADULT_CATALOG: AdultProduct[] = [
   },
   {
     id: "iasi-pants-men",
+    brand: "IASI",
     name: "Culottes Absorbantes Homme IASI Pants MEN",
     category: "adulte",
     subCategory: "Culottes Absorbantes Homme (Pants)",
@@ -139,6 +145,7 @@ export const ADULT_CATALOG: AdultProduct[] = [
   },
   {
     id: "iasi-men-conchiglie",
+    brand: "IASI",
     name: "Coquilles Absorbantes Homme IASI MEN",
     category: "adulte",
     subCategory: "Protections Anatomiques Homme",
@@ -181,6 +188,7 @@ export const ADULT_CATALOG: AdultProduct[] = [
   },
   {
     id: "iasi-pants-unisex",
+    brand: "IASI",
     name: "Culottes Absorbantes Unisex IASI Alta Protezione",
     category: "adulte",
     subCategory: "Culottes Absorbantes Mixte (Pants)",
@@ -241,6 +249,7 @@ export const ADULT_CATALOG: AdultProduct[] = [
   },
   {
     id: "iasi-pannoloni-mutandina-maxi",
+    brand: "IASI",
     name: "Changes Complets IASI Assorbenza MAXI",
     category: "adulte",
     subCategory: "Changes Complets avec Attaches",
@@ -283,6 +292,7 @@ export const ADULT_CATALOG: AdultProduct[] = [
   },
   {
     id: "iasi-traverse-adulti",
+    brand: "IASI",
     name: "Alèses de Protection IASI Traverse",
     category: "adulte",
     subCategory: "Alèses de Protection Lit & Fauteuil",
@@ -325,6 +335,7 @@ export const ADULT_CATALOG: AdultProduct[] = [
   },
   {
     id: "iasi-wipes-adulti",
+    brand: "IASI",
     name: "Lingettes de Toilette Adulte IASI Extra Large",
     category: "adulte",
     subCategory: "Lingettes de Toilette Adulte",
@@ -347,4 +358,83 @@ export const ADULT_CATALOG: AdultProduct[] = [
       }
     ]
   }
+
+];
+
+const ADDITIONAL_ADULT_CATALOG: AdultProduct[] = [
+  {
+    "id": "tena-proskin-pants-plus",
+    "name": "Slips Absorbants TENA ProSkin Pants Plus",
+    "brand": "TENA",
+    "category": "adulte",
+    "subCategory": "Slips Absorbants & Incontinence",
+    "seoUrl": "/produit/incontinence-adultes/tena-proskin-pants-plus",
+    "description": "Les slips absorbants TENA ProSkin Pants Plus sont des protections jetables douces et confortables qui s'enfilent comme un sous-vêtement classique pour gérer l'incontinence modérée à forte de jour comme de nuit. Dotés de la technologie FeelDry Advanced, de matières respirantes, de barrières anti-fuites intégrées et d'un neutraliseur d'odeurs, ils sont testés dermatologiquement et accrédités par la Skin Health Alliance.",
+    "features": [
+      "Triple protection contre les fuites, les odeurs et l'humidité de jour comme de nuit",
+      "Technologie FeelDry Advanced : capture rapide des liquides loin de la peau",
+      "Matières douces et respirantes préservant la santé naturelle de l'épiderme",
+      "Maintien ajusté comme un sous-vêtement avec coutures latérales déchirables",
+      "Testés dermatologiquement et accrédités par la Skin Health Alliance"
+    ],
+    "galleryImages": [
+      "/image/reviewproskin1.png",
+      "/image/reviewproskin2.png",
+      "/image/reviewproskin3.png",
+      "/image/reviewprokin4.png",
+      "/image/reviewprokin5.png"
+    ],
+    "variants": [
+      {
+        "sku": "TEN-PSP-XS-14",
+        "slug": "tena-proskin-pants-plus-xs-14",
+        "label": "Taille XS (Extra Small) - 14 unités",
+        "price": 6.89,
+        "inStock": true,
+        "image": "/image/proskinxs.png",
+        "detailedDescription": "Slips absorbants TENA ProSkin Pants Plus Taille XS en paquet de 14 unités. Conçus pour l'incontinence modérée à forte, ils s'enfilent comme un sous-vêtement classique et offrent une triple protection contre les fuites, les odeurs et l'humidité de jour comme de nuit. Dotés de la technologie FeelDry Advanced qui éloigne rapidement les liquides de la peau, de matières douces respirantes et de coutures latérales déchirables pour un retrait facile. Testés dermatologiquement et accrédités par la Skin Health Alliance."
+      },
+      {
+        "sku": "TEN-PSP-S-14",
+        "slug": "tena-proskin-pants-plus-s-14",
+        "label": "Taille S (Small) - 14 unités",
+        "price": 6.89,
+        "inStock": true,
+        "image": "/image/proskins.png",
+        "detailedDescription": "Slips absorbants TENA ProSkin Pants Plus Taille S en paquet de 14 unités. Offrent un maintien ajusté et discret grâce à leurs élastiques souples qui suivent les mouvements du corps au quotidien, de jour comme de nuit. Leur zone d'absorption haute performance verrouille instantanément l'humidité tout en neutralisant les odeurs, préservant ainsi la santé naturelle de la peau. Testés dermatologiquement et accrédités par la Skin Health Alliance."
+      },
+      {
+        "sku": "TEN-PSP-M-14",
+        "slug": "tena-proskin-pants-plus-m-14",
+        "label": "Taille M (Medium) - 14 unités",
+        "price": 6.89,
+        "inStock": true,
+        "image": "/image/proskinm.png",
+        "detailedDescription": "Slips absorbants TENA ProSkin Pants Plus Taille M en paquet de 14 unités. Idéals pour les personnes actives recherchant une sécurité maximale contre les fuites urinaires modérées à fortes de jour comme de nuit. Équipés de barrières anti-fuites intégrées, d'un voile micro-aéré respirant et d'un système de neutralisation des odeurs pour une sensation de fraîcheur et de confort durable. Accrédités par la Skin Health Alliance."
+      },
+      {
+        "sku": "TEN-PSP-L-14",
+        "slug": "tena-proskin-pants-plus-l-14",
+        "label": "Taille L (Large) - 14 unités",
+        "price": 6.89,
+        "inStock": true,
+        "image": "/image/proskinl.png",
+        "detailedDescription": "Slips absorbants TENA ProSkin Pants Plus Taille L en paquet de 14 unités. Combinent le confort d'un sous-vêtement extensible à une absorption renforcée (niveau Plus — 6 gouttes sur 8) de jour comme de nuit. La technologie FeelDry Advanced capture rapidement les liquides pour garder la peau sèche, tandis que les matériaux doux et respirants limitent les risques d'irritation. Testés dermatologiquement et accrédités Skin Health Alliance."
+      },
+      {
+        "sku": "TEN-PSP-XL-12",
+        "slug": "tena-proskin-pants-plus-xl-12",
+        "label": "Taille XL (Extra Large) - 12 unités",
+        "price": 6.89,
+        "inStock": true,
+        "image": "/image/proskinxl.png",
+        "detailedDescription": "Slips absorbants TENA ProSkin Pants Plus Taille XL en paquet de 12 unités. Adaptés aux morphologies plus larges pour une protection sûre et confortable contre les fuites modérées à fortes de jour comme de nuit. Dotés d'une ceinture élastique souple, de doubles barrières anti-fuites, d'un neutraliseur d'odeurs et de coutures latérales faciles à déchirer. Testés dermatologiquement et accrédités par la Skin Health Alliance."
+      }
+    ]
+  }
+];
+
+export const ADULT_CATALOG: AdultProduct[] = [
+  ...BASE_ADULT_CATALOG,
+  ...ADDITIONAL_ADULT_CATALOG,
 ];
